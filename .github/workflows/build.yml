@@ -187,7 +187,7 @@ jobs:
             gh release create "$TAG" build/Relacoes.apk "Relacoes-${TAG}.apk" \
               --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
-              --title "Relações $TAG" \
+              --title "Círculo $TAG" \
               --latest \
               --generate-notes
           fi

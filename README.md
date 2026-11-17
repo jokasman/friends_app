@@ -50,7 +50,7 @@ O workflow `.github/workflows/build.yml` corre os testes da lógica e compila a 
 
 - **APK de preview sem assinatura**: em cada push para `main` e nas execuções manuais normais (artefacto `Relacoes-apk-preview-unsigned`).
 - **APK assinado**: em **Actions → Build Android APK → Run workflow**, com a opção **Gerar um APK assinado** marcada, ou num push para `main` com `[signed-apk]` na mensagem do commit (artefacto `Relacoes-apk-assinado`).
-- **Release**: uma tag `v*` (ex.: `v1.0.0`) gera o APK assinado e cria uma Release.
+- **Release**: em **Run workflow** com a opção **Publicar uma Release** marcada (usa a versão do `AndroidManifest.xml`), ou com uma tag `v*`. O APK fica anexado à Release e o link direto para a versão mais recente é sempre https://github.com/jokasman/friends_app/releases/latest/download/Relacoes.apk
 
 Os APKs assinados precisam destes *Repository secrets* em **Settings → Secrets and variables → Actions**:
 

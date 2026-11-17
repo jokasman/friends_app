@@ -8,6 +8,11 @@ on:
         type: boolean
         required: false
         default: false
+      release:
+        description: Publicar uma Release com o APK assinado (versão do AndroidManifest.xml)
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main]
     tags: ['v*']
@@ -17,7 +22,7 @@ permissions:
 
 jobs:
   preview:
-    if: (github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.signed != true)) && !startsWith(github.ref, 'refs/tags/v')
+    if: (github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.signed != true)) && !startsWith(github.ref, 'refs/tags/v') && inputs.release != true
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -101,7 +106,7 @@ jobs:
         run: rm -f release.jks
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release == true)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -152,12 +157,14 @@ jobs:
         run: rm -f release.jks
 
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && inputs.release == true)
     needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: Relacoes-apk-release
@@ -167,8 +174,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/Relacoes.apk "Relacoes-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "Relacoes-${GITHUB_REF_NAME}.apk" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Relações $GITHUB_REF_NAME" \
-            --generate-notes
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="v$(grep -o 'android:versionName="[^"]*"' AndroidManifest.xml | cut -d'"' -f2)"
+          fi
+          # Relacoes.apk dá um link fixo para a versão mais recente: releases/latest/download/Relacoes.apk
+          cp build/Relacoes.apk "Relacoes-${TAG}.apk"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" build/Relacoes.apk "Relacoes-${TAG}.apk" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" build/Relacoes.apk "Relacoes-${TAG}.apk" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Relações $TAG" \
+              --latest \
+              --generate-notes
+          fi

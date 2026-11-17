@@ -23,7 +23,9 @@ import pt.relacoes.notify.Engine;
 
 /** Registar um contacto ("Já falei"): data (pode ser passada), meio e nota. Em janela de diálogo. */
 public class LogActivity extends BaseActivity {
-    static final String EXTRA_MEDIUM = "medium", EXTRA_MESSAGE = "message", EXTRA_TEMPLATE = "template", EXTRA_ASK = "ask";
+    static final String EXTRA_MEDIUM = "medium", EXTRA_MESSAGE = "message", EXTRA_TEMPLATE = "template", EXTRA_ASK = "ask", EXTRA_BY_THEM = "by_them";
+    private static final int[] FOLLOW = {0, 1, 2, 3, 7};
+    private static final String[] FOLLOW_N = {"Não", "1 dia", "2 dias", "3 dias", "1 semana"};
 
     static Intent intent(Context c, long person, long reminder, int medium, String message, long template) {
         return new Intent(c, LogActivity.class).putExtra(PersonActivity.EXTRA_PERSON, person)
@@ -80,6 +82,24 @@ public class LogActivity extends BaseActivity {
         box.addView(Views.chooserWrap(this, Interaction.MEDIUMS, medium[0], 3, k -> medium[0] = k));
         box.addView(Ui.spacer(this, 6));
 
+        // Quem tomou a iniciativa e follow-up se não houver resposta.
+        final boolean[] byMe = {!in.getBooleanExtra(EXTRA_BY_THEM, false)};
+        final int[] follow = {0};
+        final LinearLayout followBox = new LinearLayout(this);
+        followBox.setOrientation(LinearLayout.VERTICAL);
+        box.addView(Ui.subLabel(this, "Quem tomou a iniciativa"));
+        box.addView(Views.chooser(this, new String[]{"Fui eu", "Foi " + p.firstName()}, byMe[0] ? 0 : 1, k -> {
+            byMe[0] = k == 0;
+            followBox.setVisibility(byMe[0] ? android.view.View.VISIBLE : android.view.View.GONE);
+        }));
+        followBox.addView(Ui.subLabel(this, "Follow-up se não houver resposta"));
+        followBox.addView(Views.chooserWrap(this, FOLLOW_N, 0, 3, k -> follow[0] = FOLLOW[k]));
+        followBox.addView(Views.hint(this, "Cria um lembrete que fecha sozinho quando registar o próximo contacto com "
+                + p.firstName() + " (por exemplo, a resposta)."));
+        followBox.setVisibility(byMe[0] ? android.view.View.VISIBLE : android.view.View.GONE);
+        box.addView(followBox);
+        box.addView(Ui.spacer(this, 10));
+
         if (!message.isEmpty()) {
             box.addView(Ui.subLabel(this, "Mensagem enviada"));
             TextView mt = Ui.text(this, message, 14, R.color.text, false);
@@ -107,7 +127,8 @@ public class LogActivity extends BaseActivity {
             i.note = note.getText().toString().trim();
             i.message = msg;
             i.templateId = template;
-            Engine.contacted(this, i, reminderId);
+            i.byMe = byMe[0];
+            Engine.contacted(this, i, reminderId, byMe[0] ? follow[0] : 0);
             Toast.makeText(this, "Contacto registado", Toast.LENGTH_SHORT).show();
             finish();
         });

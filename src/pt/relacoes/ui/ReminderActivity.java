@@ -68,7 +68,7 @@ public class ReminderActivity extends BaseActivity {
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         LinearLayout bar = Views.topBar(this, isNew ? "Novo lembrete" : "Lembrete", true);
-        if (!isNew && r.auto == Reminder.AUTO_NONE) bar.addView(Ui.iconButton(this, R.drawable.ic_delete, "Apagar", v -> delete()));
+        if (!isNew && !r.isManaged()) bar.addView(Ui.iconButton(this, R.drawable.ic_delete, "Apagar", v -> delete()));
         TextView save = Ui.button(this, "Guardar", true);
         save.setOnClickListener(v -> save());
         bar.addView(save);
@@ -88,7 +88,7 @@ public class ReminderActivity extends BaseActivity {
 
     private void render() {
         content.removeAllViews();
-        boolean auto = r.auto != Reminder.AUTO_NONE;
+        boolean auto = r.isManaged();
 
         LinearLayout pc = Ui.card(this);
         pc.addView(Ui.cardHeader(this, R.drawable.ic_person, "Pessoa"));
@@ -169,6 +169,11 @@ public class ReminderActivity extends BaseActivity {
                 + "(sem insistir entre as " + Fmt.hm(Prefs.quietStart(this)) + " e as " + Fmt.hm(Prefs.morning(this)) + ")."));
         content.addView(nc);
 
+        if (r.auto == Reminder.AUTO_FOLLOWUP) {
+            LinearLayout fc = Ui.card(this);
+            fc.addView(Views.hint(this, "Follow-up automático: fecha sozinho quando registar o próximo contacto com esta pessoa."));
+            content.addView(fc, 1);
+        }
         if (!isNew) {
             TextView done = Ui.button(this, "Marcar como feito", true);
             done.setOnClickListener(v -> { Engine.done(this, r.id); finish(); });
@@ -196,7 +201,7 @@ public class ReminderActivity extends BaseActivity {
 
     private void save() {
         if (person == null) { pickPerson(); return; }
-        if (r.auto == Reminder.AUTO_NONE) {
+        if (!r.isManaged()) {
             String t = text.getText().toString().trim();
             if (t.isEmpty()) { text.setError("Escreva o lembrete"); text.requestFocus(); return; }
             r.text = t;

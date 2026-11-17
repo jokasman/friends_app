@@ -50,7 +50,8 @@ final class Contacting {
         List<Interaction> hist = Db.get(a).interactions(p.id);
         if (!hist.isEmpty()) {
             Interaction last = hist.get(0);
-            sb.append("Último contacto: ").append(Fmt.ago(today - Days.of(last.at))).append(" · ").append(Interaction.mediumName(last.medium));
+            sb.append("Último contacto: ").append(Fmt.ago(today - Days.of(last.at))).append(" · ").append(Interaction.mediumName(last.medium))
+                    .append(last.byMe ? " · fui eu" : " · foi " + p.firstName());
             if (!last.note.isEmpty()) sb.append("\n“").append(last.note).append("”");
             sb.append("\n\n");
         }

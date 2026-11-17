@@ -73,7 +73,7 @@ public final class Engine {
                 "Aniversário de " + p.firstName() + " daqui a " + p.bdayBefore + (p.bdayBefore == 1 ? " dia" : " dias"), birthdayChanged, today, morning);
         if (birthdayChanged) {
             for (Reminder r : bdays) {
-                if (r.auto != Reminder.AUTO_NONE) continue;
+                if (r.isManaged()) continue;
                 r.dueAt = Recur.birthdayDue(p, r.offsetDays, today, Recur.minutesOf(r.dueAt, morning));
                 r.notified = false; r.done = false; r.nextAt = r.dueAt;
                 db.save(r);
@@ -108,8 +108,33 @@ public final class Engine {
 
     /** Regista um contacto e recalcula o "manter contacto" a partir dessa data. */
     public static void contacted(Context c, Interaction i, long reminderId) {
+        contacted(c, i, reminderId, 0);
+    }
+
+    /**
+     * Regista um contacto. Fecha os follow-ups pendentes da pessoa (houve um novo contacto) e, se followUpDays > 0,
+     * cria um follow-up para daqui a N dias caso não haja resposta.
+     */
+    public static void contacted(Context c, Interaction i, long reminderId, int followUpDays) {
         Db db = Db.get(c);
         db.add(i);
+        for (Reminder f : db.reminders(i.personId)) {
+            if (f.auto != Reminder.AUTO_FOLLOWUP || f.done || f.id == reminderId) continue;
+            f.done = true; f.doneAt = System.currentTimeMillis(); f.nextAt = Long.MAX_VALUE;
+            db.save(f);
+            Notify.cancel(c, f.id);
+        }
+        if (followUpDays > 0) {
+            Reminder f = new Reminder();
+            f.personId = i.personId; f.kind = Reminder.ONCE; f.auto = Reminder.AUTO_FOLLOWUP;
+            f.text = "Sem resposta " + (i.message.isEmpty() ? "ao contacto" : "à mensagem") + " de "
+                    + pt.relacoes.core.Fmt.date(i.at, System.currentTimeMillis()) + " (" + Interaction.mediumName(i.medium) + ")? Fazer follow-up";
+            f.dueAt = Recur.at(Days.of(i.at) + followUpDays, Prefs.morning(c));
+            if (f.dueAt <= System.currentTimeMillis()) f.dueAt = System.currentTimeMillis() + 60_000L;
+            f.nagMin = Prefs.nagDefault(c);
+            f.nextAt = f.dueAt;
+            db.save(f);
+        }
         Person p = db.person(i.personId);
         if (p != null) syncPerson(c, p, false);
         if (reminderId > 0) {

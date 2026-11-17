@@ -12,6 +12,8 @@ public class Interaction {
     public String message = "";
     /** Modelo usado (0 = nenhum). */
     public long templateId;
+    /** Quem tomou a iniciativa: true = eu, false = a outra pessoa. */
+    public boolean byMe = true;
 
     public static String mediumName(int m) { return m >= 0 && m < MEDIUMS.length ? MEDIUMS[m] : "—"; }
 }

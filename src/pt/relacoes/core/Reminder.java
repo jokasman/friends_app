@@ -9,7 +9,7 @@ public class Reminder {
     public static final int DAY = 1, WEEK = 2, MONTH = 3, YEAR = 4;
     public static final String[] UNITS = {"", "dia(s)", "semana(s)", "mês(es)", "ano(s)"};
     /** Lembretes criados automaticamente a partir da pessoa. */
-    public static final int AUTO_NONE = 0, AUTO_KEEP = 1, AUTO_BDAY_DAY = 2, AUTO_BDAY_BEFORE = 3;
+    public static final int AUTO_NONE = 0, AUTO_KEEP = 1, AUTO_BDAY_DAY = 2, AUTO_BDAY_BEFORE = 3, AUTO_FOLLOWUP = 4;
 
     public long id, personId;
     public String text = "";
@@ -29,6 +29,9 @@ public class Reminder {
     public long doneAt;
     /** Já notificado pelo menos uma vez para a data atual. */
     public boolean notified;
+
+    /** Gerido automaticamente a partir da pessoa (manter contacto e avisos de aniversário): não se edita à mão. */
+    public boolean isManaged() { return auto == AUTO_KEEP || auto == AUTO_BDAY_DAY || auto == AUTO_BDAY_BEFORE; }
 
     public boolean isPending(long now) { return !done && dueAt <= now; }
 

@@ -75,7 +75,7 @@ final class RemindersTab extends MainActivity.Tab {
     /** Linha de lembrete com botão "Feito". */
     static View row(BaseActivity a, Reminder r, Person p, long now, Runnable after) {
         String title = r.kind == Reminder.KEEP ? "Falar com " + p.name : p.firstName() + " · " + r.text;
-        if (r.kind == Reminder.BIRTHDAY && r.auto != Reminder.AUTO_NONE) title = "🎂 " + r.text;
+        if (r.kind == Reminder.BIRTHDAY && r.isManaged()) title = "🎂 " + r.text;
         String sub = Reminder.kindName(r.kind) + " · " + Fmt.when(r.dueAt, now);
         if (r.kind == Reminder.REPEAT) sub += " · " + r.repeatText();
         if (r.kind == Reminder.BIRTHDAY && r.offsetDays > 0) sub += " · " + r.offsetDays + " dias antes";

@@ -117,11 +117,20 @@ public class PersonActivity extends BaseActivity {
         qa.setPadding(0, Ui.dp(this, 14), 0, 0);
         qs.addView(qa);
         head.addView(qs, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        TextView reg = Ui.button(this, "Já falei · registar contacto", true);
+        LinearLayout regs = new LinearLayout(this);
+        TextView reg = Ui.button(this, "Contactei", true);
         reg.setOnClickListener(v -> startActivity(LogActivity.intent(this, p.id, reminderId, -1, "", 0)));
+        TextView got = Ui.button(this, p.firstName() + " contactou", false);
+        Ui.ellipsize(got, 1);
+        got.setOnClickListener(v -> startActivity(LogActivity.intent(this, p.id, reminderId, -1, "", 0)
+                .putExtra(LogActivity.EXTRA_BY_THEM, true)));
+        regs.addView(reg, Ui.lpWeight(1));
+        LinearLayout.LayoutParams glp0 = Ui.lpWeight(1);
+        glp0.setMarginStart(Ui.dp(this, 8));
+        regs.addView(got, glp0);
         LinearLayout.LayoutParams rlp = Ui.lpMW();
         rlp.topMargin = Ui.dp(this, 14);
-        head.addView(reg, rlp);
+        head.addView(regs, rlp);
         if (p.hasBirthday()) {
             long nb = Recur.nextBirthday(p, today);
             if (nb - today <= 1) {
@@ -253,7 +262,8 @@ public class PersonActivity extends BaseActivity {
         List<Interaction> hist = db.interactions(p.id);
         if (hist.isEmpty()) hc.addView(Views.empty(this, "Ainda não há contactos registados."));
         for (Interaction i : hist) {
-            String t = Interaction.mediumName(i.medium) + " · " + Fmt.date(i.at, now) + " (" + Fmt.ago(today - Days.of(i.at)) + ")";
+            String t = (i.byMe ? "↗ " : "↙ ") + Interaction.mediumName(i.medium) + (i.byMe ? " · eu" : " · " + p.firstName())
+                    + " · " + Fmt.date(i.at, now) + " (" + Fmt.ago(today - Days.of(i.at)) + ")";
             String sub = i.note;
             if (!i.message.isEmpty()) sub = (sub.isEmpty() ? "" : sub + "\n") + "✉ " + i.message;
             LinearLayout row = Ui.optionRow(this, t, sub.isEmpty() ? null : sub, null);

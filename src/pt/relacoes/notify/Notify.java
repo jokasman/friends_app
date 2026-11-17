@@ -71,7 +71,7 @@ public final class Notify {
             long bday = Days.of(r.dueAt) + r.offsetDays; // o aniversário a que este aviso se refere
             long d = bday - today;
             int age = Insights.age(p, bday);
-            title = "🎂 " + (r.auto == Reminder.AUTO_NONE ? p.firstName() + ": " + r.text
+            title = "🎂 " + (!r.isManaged() ? p.firstName() + ": " + r.text
                     : d == 0 ? "Hoje é o aniversário de " + p.name : "Aniversário de " + p.name + " " + Fmt.inDays(d));
             body = (age > 0 ? (d < 0 ? "Fez " : "Faz ") + age + " anos" : "Aniversário") + " · " + Fmt.birthday(p);
             big.append(body);

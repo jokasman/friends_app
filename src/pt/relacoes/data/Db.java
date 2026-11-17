@@ -31,7 +31,7 @@ public final class Db extends SQLiteOpenHelper {
         return inst;
     }
 
-    private Db(Context c) { super(c, "relacoes.db", null, 1); }
+    private Db(Context c) { super(c, "relacoes.db", null, 2); }
 
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(false); }
 
@@ -43,7 +43,7 @@ public final class Db extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE groups_ (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color INTEGER, sort INTEGER DEFAULT 0)");
         db.execSQL("CREATE TABLE person_groups (person INTEGER NOT NULL, grp INTEGER NOT NULL, PRIMARY KEY (person, grp))");
         db.execSQL("CREATE TABLE interactions (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, at INTEGER NOT NULL,"
-                + " medium INTEGER DEFAULT 8, note TEXT, message TEXT, template INTEGER DEFAULT 0)");
+                + " medium INTEGER DEFAULT 8, note TEXT, message TEXT, template INTEGER DEFAULT 0, by_me INTEGER DEFAULT 1)");
         db.execSQL("CREATE INDEX interactions_person ON interactions(person, at)");
         db.execSQL("CREATE TABLE reminders (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, text TEXT, kind INTEGER,"
                 + " auto INTEGER DEFAULT 0, due_at INTEGER, unit INTEGER DEFAULT 3, n INTEGER DEFAULT 1, offset_days INTEGER DEFAULT 0,"
@@ -60,7 +60,9 @@ public final class Db extends SQLiteOpenHelper {
         seedTemplates(db);
     }
 
-    @Override public void onUpgrade(SQLiteDatabase db, int o, int n) {}
+    @Override public void onUpgrade(SQLiteDatabase db, int o, int n) {
+        if (o < 2) db.execSQL("ALTER TABLE interactions ADD COLUMN by_me INTEGER DEFAULT 1");
+    }
 
     static void seedTemplates(SQLiteDatabase db) {
         for (Object[] t : Template.BUILTIN) {
@@ -197,12 +199,12 @@ public final class Db extends SQLiteOpenHelper {
 
     // ---------------------------------------------------------------- Interações
 
-    private static final String I_COLS = "id, person, at, medium, note, message, template";
+    private static final String I_COLS = "id, person, at, medium, note, message, template, by_me";
 
     private static Interaction interaction(Cursor c) {
         Interaction i = new Interaction();
         i.id = c.getLong(0); i.personId = c.getLong(1); i.at = c.getLong(2); i.medium = c.getInt(3);
-        i.note = nz(c.getString(4)); i.message = nz(c.getString(5)); i.templateId = c.getLong(6);
+        i.note = nz(c.getString(4)); i.message = nz(c.getString(5)); i.templateId = c.getLong(6); i.byMe = c.getInt(7) != 0;
         return i;
     }
 
@@ -227,7 +229,7 @@ public final class Db extends SQLiteOpenHelper {
     public void add(Interaction i) {
         ContentValues v = new ContentValues();
         v.put("person", i.personId); v.put("at", i.at); v.put("medium", i.medium); v.put("note", i.note);
-        v.put("message", i.message); v.put("template", i.templateId);
+        v.put("message", i.message); v.put("template", i.templateId); v.put("by_me", i.byMe ? 1 : 0);
         i.id = getWritableDatabase().insert("interactions", null, v);
         refreshLast(i.personId);
     }

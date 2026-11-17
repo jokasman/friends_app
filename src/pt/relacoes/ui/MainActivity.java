@@ -134,11 +134,14 @@ public class MainActivity extends BaseActivity {
             ImageView ic = Ui.icon(this, ICONS[i], sel ? R.color.accent : R.color.text2, 30, 4);
             if (sel) ic.setBackground(Ui.round(Ui.col(this, R.color.accentSoft), Ui.dp(this, 15)));
             LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(Ui.dp(this, 56), Ui.dp(this, 30));
+            ilp.gravity = Gravity.CENTER_HORIZONTAL;
             ic.setLayoutParams(ilp);
             item.addView(ic);
             TextView l = Ui.text(this, TITLES[i], 12, sel ? R.color.accent : R.color.text2, sel);
             l.setPadding(0, Ui.dp(this, 2), 0, 0);
-            item.addView(l);
+            l.setGravity(Gravity.CENTER_HORIZONTAL);
+            l.setSingleLine(true);
+            item.addView(l, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             item.setOnClickListener(v -> { if (k != tab) show(k); });
             nav.addView(item, Ui.lpWeight(1));
         }

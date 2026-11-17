@@ -9,6 +9,15 @@ App Android nativa para manter contacto com as pessoas que lhe importam, pessoai
 - **Lembretes (modelo unificado)**: únicos ou recorrentes, com texto livre, vários por pessoa. Insistem com a periodicidade escolhida até serem marcados como feitos, sem insistir durante a noite. A notificação tem as ações **Feito**, **Adiar** e **Já falei**.
   - **Manter contacto**: frequência por pessoa (ex.: mensal). O prazo conta a partir do último contacto registado. Em "Já falei" indica-se a data real e o meio, e o próximo aviso é recalculado.
   - **Aniversários**: aviso no próprio dia e/ou X dias antes, configurável por pessoa, e lembretes extra com texto próprio (ex.: comprar prenda 7 dias antes). Insistem até serem feitos. 29 de fevereiro conta como 28 nos anos comuns.
+- **Despertador (como no Lembra)**: aniversários e lembretes criados à mão tocam como despertador, e isto pode ser mudado em cada lembrete.
+  - Toca no canal de alarme, por isso ouve-se mesmo em silêncio. Abre em ecrã inteiro por cima do bloqueio e vibra.
+  - Usa um volume próprio, com volume crescente opcional, e o som pode ser escolhido.
+  - Só pára com **Feito**, **Adiar** ou **Já falei**. **Feito** exige a impressão digital (opção nas definições).
+  - Vários alarmes tocam em fila. No relógio Wear OS aparecem as ações Adiar e Abrir no telemóvel.
+  - **Pausa de alarmes** entre duas datas: os alarmes atrasados tocam em fila no fim.
+  - **Pausa noturna** das insistências, opcional.
+  - Ecrã **"Por tratar"** ao desbloquear o telemóvel.
+  - **Verificação de fiabilidade**: notificações, alarmes exatos, bateria, ecrã inteiro e abrir por cima de outras apps, com dicas por marca e teste do despertador.
 - **Mensagens de aniversário**: no dia, a app sugere 3 a 4 mensagens da biblioteca (curtas ou longas, conforme a preferência da pessoa) e evita as já enviadas. A mensagem pode ser editada e enviada por WhatsApp, SMS ou pelo menu de partilha, e fica registada no histórico com a data.
 - **Biblioteca de modelos**: modelos incluídos por tipo (aniversário, saudade, profissional) e tamanho (curta, longa). O utilizador pode criar, editar e apagar modelos. Variáveis: `{nome}`, `{primeiro_nome}`, `{idade}`. Sem IA nem APIs pagas.
 - **Incentivo**:

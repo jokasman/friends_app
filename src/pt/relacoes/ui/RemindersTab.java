@@ -84,10 +84,11 @@ final class RemindersTab extends MainActivity.Tab {
                 .putExtra(PersonActivity.EXTRA_REMINDER, r.id)));
         ((android.widget.TextView) ((LinearLayout) row.getChildAt(1)).getChildAt(0)).setText(title);
         if (overdue) row.addView(Views.badge(a, "!", Views.BADGE_DANGER));
-        row.addView(Ui.iconButton(a, R.drawable.ic_check, "Feito", v -> {
+        if (r.alarm) row.addView(Views.badge(a, "⏰", Views.BADGE_ACCENT));
+        row.addView(Ui.iconButton(a, R.drawable.ic_check, "Feito", v -> Auth.confirmDone(a, r, () -> {
             Engine.done(a, r.id);
             after.run();
-        }));
+        })));
         return row;
     }
 }

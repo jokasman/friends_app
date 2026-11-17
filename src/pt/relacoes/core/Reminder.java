@@ -29,6 +29,8 @@ public class Reminder {
     public long doneAt;
     /** Já notificado pelo menos uma vez para a data atual. */
     public boolean notified;
+    /** Toca como despertador (som de alarme em ecrã inteiro até uma decisão). */
+    public boolean alarm;
 
     /** Gerido automaticamente a partir da pessoa (manter contacto e avisos de aniversário): não se edita à mão. */
     public boolean isManaged() { return auto == AUTO_KEEP || auto == AUTO_BDAY_DAY || auto == AUTO_BDAY_BEFORE; }

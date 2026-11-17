@@ -23,7 +23,7 @@ import pt.relacoes.ui.Widget;
 public final class Engine {
     private Engine() {}
 
-    static final String ACTION_FIRE = "pt.relacoes.FIRE", ACTION_DAILY = "pt.relacoes.DAILY";
+    static final String ACTION_FIRE = "pt.relacoes.FIRE", ACTION_DAILY = "pt.relacoes.DAILY", ACTION_TEST = "pt.relacoes.TEST";
 
     // ------------------------------------------------------------------ Lembretes automáticos
 
@@ -92,6 +92,7 @@ public final class Engine {
         if (fresh) {
             r = new Reminder();
             r.personId = p.id; r.kind = Reminder.BIRTHDAY; r.auto = auto;
+            r.alarm = true;
             r.nagMin = Prefs.nagDefault(c);
         }
         r.text = text;
@@ -141,6 +142,7 @@ public final class Engine {
             Reminder r = db.reminder(reminderId);
             if (r != null && r.kind != Reminder.KEEP) complete(c, r);
             Notify.cancel(c, reminderId);
+            AlarmService.stop(reminderId);
         }
         reschedule(c);
     }
@@ -149,6 +151,7 @@ public final class Engine {
     public static void done(Context c, long id) {
         Reminder r = Db.get(c).reminder(id);
         if (r == null) return;
+        AlarmService.stop(id);
         if (r.kind == Reminder.KEEP) {
             Interaction i = new Interaction();
             i.personId = r.personId; i.at = System.currentTimeMillis(); i.medium = Interaction.OTHER;
@@ -183,15 +186,24 @@ public final class Engine {
             default:
                 r.done = true; r.doneAt = now; r.nextAt = Long.MAX_VALUE;
         }
+        r.notified = false;
         db.save(r);
+        AlarmService.stop(r.id);
     }
 
     public static void snooze(Context c, long id, int minutes) {
         Reminder r = Db.get(c).reminder(id);
         if (r == null) return;
-        r.nextAt = System.currentTimeMillis() + minutes * 60_000L;
+        snoozeUntil(c, r, System.currentTimeMillis() + minutes * 60_000L);
+    }
+
+    /** Adia até uma data/hora: deixa de estar "por tratar" e volta a avisar nessa altura. */
+    public static void snoozeUntil(Context c, Reminder r, long until) {
+        r.nextAt = until;
+        r.notified = false;
         Db.get(c).save(r);
-        Notify.cancel(c, id);
+        Notify.cancel(c, r.id);
+        AlarmService.stop(r.id);
         reschedule(c);
     }
 
@@ -202,7 +214,35 @@ public final class Engine {
         r.nextAt = r.dueAt;
         Db.get(c).save(r);
         Notify.cancel(c, r.id);
+        AlarmService.stop(r.id);
         reschedule(c);
+    }
+
+    /** Apaga um lembrete (pára o toque e a notificação). */
+    public static void deleted(Context c, long id) {
+        Db.get(c).deleteReminder(id);
+        Notify.cancel(c, id);
+        AlarmService.stop(id);
+        reschedule(c);
+    }
+
+    // ------------------------------------------------------------------ Pausa de alarmes
+
+    public static boolean pauseActive(Context c) {
+        long now = System.currentTimeMillis(), s = Prefs.pauseStart(c), e = Prefs.pauseEnd(c);
+        return s > 0 && e > s && now >= s && now < e;
+    }
+
+    /** Define (ou remove, com 0) a pausa de alarmes. Os alarmes que vencerem durante a pausa tocam em fila no fim. */
+    public static void setPause(Context c, long start, long end) {
+        Prefs.setPause(c, start, end);
+        if (pauseActive(c)) AlarmService.deferForPause(c);
+        reschedule(c);
+    }
+
+    /** Teste do despertador daqui a N ms. */
+    public static void scheduleTest(Context c, long delayMs) {
+        setExact(c, c.getSystemService(AlarmManager.class), System.currentTimeMillis() + delayMs, pi(c, ACTION_TEST, 3));
     }
 
     // ------------------------------------------------------------------ Alarmes
@@ -211,15 +251,28 @@ public final class Engine {
     static void fire(Context c) {
         long now = System.currentTimeMillis();
         Db db = Db.get(c);
-        int quiet = Prefs.quietStart(c), morning = Prefs.morning(c);
+        boolean paused = pauseActive(c);
+        if (paused) AlarmService.deferForPause(c);
         for (Reminder r : db.reminders()) {
             if (r.done || r.nextAt > now + 30_000L) continue;
-            Notify.reminder(c, r);
+            if (r.alarm && paused) {
+                // Pausa de alarmes: toca em fila quando a pausa acabar.
+                r.nextAt = Prefs.pauseEnd(c);
+                db.save(r);
+                continue;
+            }
             r.notified = true;
-            r.nextAt = r.nagMin > 0 ? Recur.outsideQuiet(now + r.nagMin * 60_000L, quiet, morning) : Long.MAX_VALUE;
+            r.nextAt = r.nagMin > 0 ? nextNag(c, now + r.nagMin * 60_000L) : Long.MAX_VALUE;
             db.save(r);
+            if (r.alarm) AlarmService.start(c, r.id);
+            else Notify.reminder(c, r);
         }
         reschedule(c);
+    }
+
+    /** Próxima insistência, respeitando a pausa noturna (se estiver ligada). */
+    static long nextNag(Context c, long t) {
+        return Prefs.nightPause(c) ? Recur.outsideQuiet(t, Prefs.quietStart(c), Prefs.morning(c)) : t;
     }
 
     /** Tarefas da manhã: sugestões do dia e resumo mensal (dia 1). */
@@ -235,7 +288,15 @@ public final class Engine {
     /** Agenda o próximo lembrete e a tarefa da manhã; atualiza o widget. */
     public static void reschedule(Context c) {
         long next = Long.MAX_VALUE;
-        for (Reminder r : Db.get(c).reminders()) if (!r.done && r.nextAt < next) next = r.nextAt;
+        long ps = Prefs.pauseStart(c), pe = Prefs.pauseEnd(c), now = System.currentTimeMillis();
+        boolean pauseSet = ps > 0 && pe > ps && pe > now;
+        for (Reminder r : Db.get(c).reminders()) {
+            if (r.done) continue;
+            long t = r.nextAt;
+            if (r.alarm && pauseSet && t >= ps && t < pe) t = pe; // vence durante a pausa: toca no fim
+            if (t < next) next = t;
+        }
+        if (pauseSet && ps > now && ps < next) next = ps; // acorda no início da pausa para silenciar o que estiver a tocar
         AlarmManager am = c.getSystemService(AlarmManager.class);
         PendingIntent fire = pi(c, ACTION_FIRE, 1);
         if (next == Long.MAX_VALUE) am.cancel(fire);
@@ -250,6 +311,7 @@ public final class Engine {
         if (cal.getTimeInMillis() <= System.currentTimeMillis()) cal.add(Calendar.DAY_OF_MONTH, 1);
         setExact(c, am, cal.getTimeInMillis(), pi(c, ACTION_DAILY, 2));
         Widget.updateAll(c);
+        AlarmService.sync(c);
     }
 
     public static boolean canExact(Context c) {

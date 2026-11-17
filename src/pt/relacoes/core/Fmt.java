@@ -40,6 +40,13 @@ public final class Fmt {
         return String.format(Locale.ROOT, "%02d:%02d", c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE));
     }
 
+    /** "10 min", "1 h", "1 h 30", "1 dia". */
+    public static String duration(int min) {
+        if (min < 60) return min + " min";
+        if (min % 1440 == 0) return (min / 1440) + (min == 1440 ? " dia" : " dias");
+        return (min / 60) + " h" + (min % 60 == 0 ? "" : " " + (min % 60));
+    }
+
     public static String hm(int minutes) { return String.format(Locale.ROOT, "%02d:%02d", minutes / 60, minutes % 60); }
 
     /** "12 mar", "12 mar 2025" (se de outro ano). */

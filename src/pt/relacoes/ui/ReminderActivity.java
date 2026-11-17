@@ -52,6 +52,7 @@ public class ReminderActivity extends BaseActivity {
             r = new Reminder();
             r.kind = Reminder.ONCE;
             r.nagMin = Prefs.nagDefault(this);
+            r.alarm = true;
             r.personId = getIntent().getLongExtra(PersonActivity.EXTRA_PERSON, 0);
             when.add(Calendar.DAY_OF_MONTH, 1);
             int m = Prefs.morning(this);
@@ -160,6 +161,19 @@ public class ReminderActivity extends BaseActivity {
             content.addView(dc);
         }
 
+        LinearLayout al = Ui.card(this);
+        al.addView(Ui.cardHeader(this, R.drawable.ic_bell, "Despertador"));
+        android.widget.Switch sw = new android.widget.Switch(this);
+        sw.setText("Tocar como despertador");
+        sw.setTextColor(Ui.col(this, R.color.text));
+        sw.setTextSize(15);
+        sw.setChecked(r.alarm);
+        sw.setOnCheckedChangeListener((v, on) -> r.alarm = on);
+        al.addView(sw, Ui.lpMW());
+        al.addView(Views.hint(this, "Toca com som de alarme mesmo em silêncio, em ecrã inteiro, até marcar como feito"
+                + (Prefs.requireBiometric(this) ? " (com a impressão digital)" : "") + " ou adiar."));
+        content.addView(al);
+
         LinearLayout nc = Ui.card(this);
         nc.addView(Ui.cardHeader(this, R.drawable.ic_repeat, "Insistência"));
         int ns = 0;
@@ -176,7 +190,7 @@ public class ReminderActivity extends BaseActivity {
         }
         if (!isNew) {
             TextView done = Ui.button(this, "Marcar como feito", true);
-            done.setOnClickListener(v -> { Engine.done(this, r.id); finish(); });
+            done.setOnClickListener(v -> Auth.confirmDone(this, Db.get(this).reminder(r.id), () -> { Engine.done(this, r.id); finish(); }));
             LinearLayout.LayoutParams lp = Ui.lpMW();
             lp.setMargins(Ui.dp(this, 14), Ui.dp(this, 8), Ui.dp(this, 14), 0);
             content.addView(done, lp);
@@ -226,9 +240,7 @@ public class ReminderActivity extends BaseActivity {
     private void delete() {
         new AlertDialog.Builder(this).setMessage("Apagar este lembrete?")
                 .setPositiveButton("Apagar", (d, w) -> {
-                    Db.get(this).deleteReminder(r.id);
-                    pt.relacoes.notify.Notify.cancel(this, r.id);
-                    Engine.reschedule(this);
+                    Engine.deleted(this, r.id);
                     finish();
                 })
                 .setNegativeButton("Cancelar", null).show();

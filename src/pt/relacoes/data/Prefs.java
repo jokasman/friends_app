@@ -51,6 +51,44 @@ public final class Prefs {
     public static long lastExport(Context c) { return sp(c).getLong("last_export", 0); }
     public static void setLastExport(Context c, long v) { sp(c).edit().putLong("last_export", v).apply(); }
 
+    /** Pausa noturna das insistências (das quietStart à hora da manhã). */
+    public static boolean nightPause(Context c) { return sp(c).getBoolean("night_pause", true); }
+    public static void setNightPause(Context c, boolean v) { sp(c).edit().putBoolean("night_pause", v).apply(); }
+
+    // ---------------------------------------------------------------- Despertador
+
+    /** "+N min" no ecrã do alarme e na notificação. */
+    public static int quickSnooze(Context c) { return sp(c).getInt("quick_snooze", 10); }
+    public static void setQuickSnooze(Context c, int v) { sp(c).edit().putInt("quick_snooze", v).apply(); }
+
+    /** Som do despertador (URI) ou null para o alarme do sistema. */
+    public static String alarmSound(Context c) { return sp(c).getString("alarm_sound", null); }
+    public static void setAlarmSound(Context c, String v) { sp(c).edit().putString("alarm_sound", v).apply(); }
+
+    /** Volume próprio do despertador em % (10–100), independente do volume de alarme do sistema. */
+    public static int alarmVolume(Context c) { return sp(c).getInt("alarm_volume", 80); }
+    public static void setAlarmVolume(Context c, int v) { sp(c).edit().putInt("alarm_volume", Math.max(10, Math.min(100, v))).apply(); }
+
+    /** Começar baixo e aumentar até ao volume escolhido. */
+    public static boolean crescendo(Context c) { return sp(c).getBoolean("crescendo", true); }
+    public static void setCrescendo(Context c, boolean v) { sp(c).edit().putBoolean("crescendo", v).apply(); }
+
+    /** Pausa de alarmes entre duas datas (ms; 0 = sem pausa). */
+    public static long pauseStart(Context c) { return sp(c).getLong("pause_start", 0L); }
+    public static long pauseEnd(Context c) { return sp(c).getLong("pause_end", 0L); }
+    public static void setPause(Context c, long start, long end) { sp(c).edit().putLong("pause_start", start).putLong("pause_end", end).apply(); }
+
+    /** Marcar alarmes como feitos só com impressão digital. */
+    public static boolean requireBiometric(Context c) { return sp(c).getBoolean("biometric", true); }
+    public static void setRequireBiometric(Context c, boolean v) { sp(c).edit().putBoolean("biometric", v).apply(); }
+
+    /** Abrir "Por tratar" ao desbloquear o telemóvel. */
+    public static boolean showPending(Context c) { return sp(c).getBoolean("show_pending", true); }
+    public static void setShowPending(Context c, boolean v) { sp(c).edit().putBoolean("show_pending", v).apply(); }
+
+    public static String str(Context c, String key) { return sp(c).getString(key, null); }
+    public static void setStr(Context c, String key, String v) { sp(c).edit().putString(key, v).apply(); }
+
     public static boolean onboarded(Context c) { return sp(c).getBoolean("onboarded", false); }
     public static void setOnboarded(Context c) { sp(c).edit().putBoolean("onboarded", true).apply(); }
 }

@@ -21,6 +21,7 @@ import pt.relacoes.core.Reminder;
 import pt.relacoes.data.Db;
 import pt.relacoes.data.Insights;
 import pt.relacoes.data.Prefs;
+import pt.relacoes.ui.AlarmActivity;
 import pt.relacoes.ui.BirthdayActivity;
 import pt.relacoes.ui.LogActivity;
 import pt.relacoes.ui.MainActivity;
@@ -59,14 +60,14 @@ public final class Notify {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
-    static void reminder(Context c, Reminder r) {
-        channels(c);
+    /** {título, texto, texto longo} de um lembrete (usado nas notificações, no despertador e em "Por tratar"). */
+    public static String[] texts(Context c, Reminder r) {
+        if (r == null) return new String[]{"Lembrete", "", ""};
         Person p = Db.get(c).person(r.personId);
-        if (p == null) return;
+        if (p == null) return new String[]{r.text, "", ""};
         long today = Days.of(System.currentTimeMillis());
         String title, body;
         StringBuilder big = new StringBuilder();
-        Intent open;
         if (r.kind == Reminder.BIRTHDAY) {
             long bday = Days.of(r.dueAt) + r.offsetDays; // o aniversário a que este aviso se refere
             long d = bday - today;
@@ -79,37 +80,106 @@ public final class Notify {
             for (Gift g : Db.get(c).gifts(p.id)) if (!g.done) ideas.add(g.text);
             if (!ideas.isEmpty()) big.append("\nIdeias de prenda: ").append(String.join(", ", ideas));
             if (!p.likes.isEmpty()) big.append("\nGosta de: ").append(p.likes);
-            open = d <= 0 ? new Intent(c, BirthdayActivity.class) : new Intent(c, PersonActivity.class);
         } else if (r.kind == Reminder.KEEP) {
             title = "Está na hora de falar com " + p.name;
             body = p.lastAt > 0 ? "Último contacto " + Fmt.ago(today - Days.of(p.lastAt))
                     + (p.lastMedium >= 0 ? " (" + Interaction.mediumName(p.lastMedium) + ")" : "") : "Ainda sem contactos registados";
             big.append(body);
             if (!p.notes.isEmpty()) big.append("\nTemas: ").append(p.notes);
-            open = new Intent(c, PersonActivity.class);
         } else {
             title = p.firstName() + ": " + r.text;
             body = Fmt.when(r.dueAt, System.currentTimeMillis()) + (r.kind == Reminder.REPEAT ? " · " + r.repeatText() : "");
             big.append(body);
-            open = new Intent(c, PersonActivity.class);
+            if (!p.notes.isEmpty()) big.append("\nNotas: ").append(p.notes);
         }
+        return new String[]{title, body, big.toString()};
+    }
+
+    /** Notificação normal (lembretes que não tocam como despertador, ou reserva se o despertador falhar). */
+    static void reminder(Context c, Reminder r) {
+        channels(c);
+        Person p = Db.get(c).person(r.personId);
+        if (p == null) return;
+        String[] t = texts(c, r);
+        long today = Days.of(System.currentTimeMillis());
+        Intent open;
+        if (r.kind == Reminder.BIRTHDAY && Days.of(r.dueAt) + r.offsetDays <= today) open = new Intent(c, BirthdayActivity.class);
+        else open = new Intent(c, PersonActivity.class);
         open.putExtra(PersonActivity.EXTRA_PERSON, p.id).putExtra(PersonActivity.EXTRA_REMINDER, r.id);
         Intent talked = new Intent(c, LogActivity.class).putExtra(PersonActivity.EXTRA_PERSON, p.id)
                 .putExtra(PersonActivity.EXTRA_REMINDER, r.id);
         int snooze = Prefs.snooze(c);
-        String snoozeLabel = snooze < 60 ? "Adiar " + snooze + " min" : snooze % 60 == 0 && snooze < 24 * 60 ? "Adiar " + (snooze / 60) + " h" : "Adiar";
+        // Alarmes: "Feito" abre o ecrã do alarme para confirmar com a impressão digital.
+        PendingIntent done = r.alarm && Prefs.requireBiometric(c)
+                ? activity(c, 600000 + nid(r.id), new Intent(c, AlarmActivity.class).putExtra(AlarmActivity.EXTRA_ID, r.id)
+                        .putExtra(AlarmActivity.EXTRA_DONE, true))
+                : broadcast(c, Receiver.ACTION_DONE, r.id);
         Notification.Builder b = new Notification.Builder(c, r.kind == Reminder.BIRTHDAY ? CH_BDAY : CH_REMIND)
                 .setSmallIcon(r.kind == Reminder.BIRTHDAY ? R.drawable.ic_cake : R.drawable.ic_notif)
-                .setContentTitle(title).setContentText(body)
-                .setStyle(new Notification.BigTextStyle().bigText(big.toString()))
+                .setContentTitle(t[0]).setContentText(t[1])
+                .setStyle(new Notification.BigTextStyle().bigText(t[2]))
                 .setColor(c.getColor(R.color.accent))
                 .setCategory(Notification.CATEGORY_REMINDER)
                 .setContentIntent(activity(c, nid(r.id), open))
                 .setOnlyAlertOnce(false)
-                .addAction(new Notification.Action.Builder(null, "Feito", broadcast(c, Receiver.ACTION_DONE, r.id)).build())
-                .addAction(new Notification.Action.Builder(null, snoozeLabel, broadcast(c, Receiver.ACTION_SNOOZE, r.id)).build())
+                .addAction(new Notification.Action.Builder(null, "Feito", done).build())
+                .addAction(new Notification.Action.Builder(null, "Adiar " + Fmt.duration(snooze), broadcast(c, Receiver.ACTION_SNOOZE, r.id)).build())
                 .addAction(new Notification.Action.Builder(null, "Já falei", activity(c, 500000 + nid(r.id), talked)).build());
         c.getSystemService(NotificationManager.class).notify(nid(r.id), b.build());
+    }
+
+    // ------------------------------------------------------------------ Despertador
+
+    static final String CH_WATCH = "relogio";
+    private static int watchId(long id) { return (int) (2_000_000 + id); }
+
+    /** Adiar N minutos (ação de notificação). */
+    static PendingIntent snoozeAction(Context c, long id, int minutes) {
+        Intent i = new Intent(c, Receiver.class).setAction(Receiver.ACTION_SNOOZE).putExtra(Receiver.EXTRA_ID, id).putExtra(Receiver.EXTRA_MIN, minutes);
+        return PendingIntent.getBroadcast(c, (int) (id * 8 + 5) + 3_000_000, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    static PendingIntent stopTestAction(Context c) {
+        Intent i = new Intent(c, Receiver.class).setAction(Receiver.ACTION_STOP_TEST);
+        return PendingIntent.getBroadcast(c, 3_999_999, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /**
+     * Notificação normal, separada da do serviço, para ser espelhada no relógio (Wear OS) com "Adiar".
+     * "Feito" exige a impressão digital, por isso no relógio há "Abrir no telemóvel".
+     */
+    static void watchAlarm(Context c, Reminder r) {
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        NotificationChannel ch = new NotificationChannel(CH_WATCH, "Controlos no relógio", NotificationManager.IMPORTANCE_DEFAULT);
+        ch.setDescription("Adiar o despertador a partir do relógio");
+        ch.setSound(null, null);
+        ch.enableVibration(false);
+        nm.createNotificationChannel(ch);
+        int quick = Prefs.quickSnooze(c);
+        String[] t = texts(c, r);
+        PendingIntent openPi = activity(c, 777_004, new Intent(c, AlarmActivity.class).putExtra(AlarmActivity.EXTRA_ID, r.id)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        String body = "Alarme a tocar · " + t[1];
+        Notification n = new Notification.Builder(c, CH_WATCH)
+                .setSmallIcon(R.drawable.ic_notif)
+                .setColor(c.getColor(R.color.accent))
+                .setContentTitle("⏰ " + t[0])
+                .setContentText(body)
+                .setStyle(new Notification.BigTextStyle().bigText(body))
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setContentIntent(openPi)
+                .setLocalOnly(false)
+                .setAutoCancel(false)
+                .setOnlyAlertOnce(true)
+                .addAction(new Notification.Action.Builder(null, "Adiar " + Fmt.duration(quick), snoozeAction(c, r.id, quick)).build())
+                .addAction(new Notification.Action.Builder(null, "Abrir no telemóvel", openPi).build())
+                .build();
+        nm.notify(watchId(r.id), n);
+    }
+
+    static void cancelWatchAlarm(Context c, long id) {
+        c.getSystemService(NotificationManager.class).cancel(watchId(id));
     }
 
     public static void suggestions(Context c) {

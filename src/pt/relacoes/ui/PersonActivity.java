@@ -311,7 +311,7 @@ public class PersonActivity extends BaseActivity {
         new AlertDialog.Builder(this).setTitle("Apagar " + p.name + "?")
                 .setMessage("A pessoa, os lembretes, as prendas e todo o histórico serão apagados.")
                 .setPositiveButton("Apagar", (d, w) -> {
-                    for (Reminder r : Db.get(this).reminders(p.id)) pt.relacoes.notify.Notify.cancel(this, r.id);
+                    for (Reminder r : Db.get(this).reminders(p.id)) { pt.relacoes.notify.Notify.cancel(this, r.id); pt.relacoes.notify.AlarmService.stop(r.id); }
                     Photos.delete(this, p.photo);
                     Db.get(this).deletePerson(p.id);
                     Engine.reschedule(this);

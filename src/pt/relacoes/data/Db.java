@@ -31,7 +31,7 @@ public final class Db extends SQLiteOpenHelper {
         return inst;
     }
 
-    private Db(Context c) { super(c, "relacoes.db", null, 2); }
+    private Db(Context c) { super(c, "relacoes.db", null, 3); }
 
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(false); }
 
@@ -47,7 +47,7 @@ public final class Db extends SQLiteOpenHelper {
         db.execSQL("CREATE INDEX interactions_person ON interactions(person, at)");
         db.execSQL("CREATE TABLE reminders (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, text TEXT, kind INTEGER,"
                 + " auto INTEGER DEFAULT 0, due_at INTEGER, unit INTEGER DEFAULT 3, n INTEGER DEFAULT 1, offset_days INTEGER DEFAULT 0,"
-                + " nag INTEGER DEFAULT 0, next_at INTEGER, done INTEGER DEFAULT 0, done_at INTEGER DEFAULT 0, notified INTEGER DEFAULT 0)");
+                + " nag INTEGER DEFAULT 0, next_at INTEGER, done INTEGER DEFAULT 0, done_at INTEGER DEFAULT 0, notified INTEGER DEFAULT 0, alarm INTEGER DEFAULT 0)");
         db.execSQL("CREATE TABLE templates (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, size INTEGER, text TEXT, builtin INTEGER DEFAULT 0)");
         db.execSQL("CREATE TABLE relations (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, other INTEGER NOT NULL, kind INTEGER)");
         db.execSQL("CREATE TABLE gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, text TEXT, done INTEGER DEFAULT 0, created INTEGER)");
@@ -62,6 +62,11 @@ public final class Db extends SQLiteOpenHelper {
 
     @Override public void onUpgrade(SQLiteDatabase db, int o, int n) {
         if (o < 2) db.execSQL("ALTER TABLE interactions ADD COLUMN by_me INTEGER DEFAULT 1");
+        if (o < 3) {
+            db.execSQL("ALTER TABLE reminders ADD COLUMN alarm INTEGER DEFAULT 0");
+            // Aniversários e lembretes criados à mão passam a tocar como despertador.
+            db.execSQL("UPDATE reminders SET alarm = 1 WHERE kind IN (0, 1, 3) AND auto <> 4");
+        }
     }
 
     static void seedTemplates(SQLiteDatabase db) {
@@ -252,7 +257,7 @@ public final class Db extends SQLiteOpenHelper {
 
     // ---------------------------------------------------------------- Lembretes
 
-    private static final String R_COLS = "id, person, text, kind, auto, due_at, unit, n, offset_days, nag, next_at, done, done_at, notified";
+    private static final String R_COLS = "id, person, text, kind, auto, due_at, unit, n, offset_days, nag, next_at, done, done_at, notified, alarm";
 
     private static Reminder reminder(Cursor c) {
         Reminder r = new Reminder();
@@ -260,6 +265,7 @@ public final class Db extends SQLiteOpenHelper {
         r.dueAt = c.getLong(5); r.repeatUnit = c.getInt(6); r.repeatN = c.getInt(7); r.offsetDays = c.getInt(8); r.nagMin = c.getInt(9);
         r.nextAt = c.isNull(10) ? Long.MAX_VALUE : c.getLong(10); r.done = c.getInt(11) != 0; r.doneAt = c.getLong(12);
         r.notified = c.getInt(13) != 0;
+        r.alarm = c.getInt(14) != 0;
         return r;
     }
 
@@ -289,7 +295,7 @@ public final class Db extends SQLiteOpenHelper {
         ContentValues v = new ContentValues();
         v.put("person", r.personId); v.put("text", r.text); v.put("kind", r.kind); v.put("auto", r.auto); v.put("due_at", r.dueAt);
         v.put("unit", r.repeatUnit); v.put("n", r.repeatN); v.put("offset_days", r.offsetDays); v.put("nag", r.nagMin);
-        v.put("next_at", r.nextAt); v.put("done", r.done ? 1 : 0); v.put("done_at", r.doneAt); v.put("notified", r.notified ? 1 : 0);
+        v.put("next_at", r.nextAt); v.put("done", r.done ? 1 : 0); v.put("done_at", r.doneAt); v.put("notified", r.notified ? 1 : 0); v.put("alarm", r.alarm ? 1 : 0);
         if (r.id > 0) getWritableDatabase().update("reminders", v, "id=?", a(r.id));
         else r.id = getWritableDatabase().insert("reminders", null, v);
         return r.id;

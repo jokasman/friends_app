@@ -53,8 +53,7 @@ final class Auth {
                         if (code == BiometricPrompt.BIOMETRIC_ERROR_NO_BIOMETRICS || code == BiometricPrompt.BIOMETRIC_ERROR_HW_NOT_PRESENT
                                 || code == BiometricPrompt.BIOMETRIC_ERROR_HW_UNAVAILABLE) {
                             fallback(a, ok);
-                        } else if (code != BiometricPrompt.BIOMETRIC_ERROR_USER_CANCELED && code != BiometricPrompt.BIOMETRIC_ERROR_CANCELED
-                                && code != BiometricPrompt.BIOMETRIC_ERROR_NEGATIVE_BUTTON) {
+                        } else if (code != BiometricPrompt.BIOMETRIC_ERROR_USER_CANCELED && code != BiometricPrompt.BIOMETRIC_ERROR_CANCELED) {
                             Toast.makeText(a, msg, Toast.LENGTH_SHORT).show();
                         }
                     }

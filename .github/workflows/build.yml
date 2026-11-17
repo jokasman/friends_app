@@ -33,13 +33,20 @@ jobs:
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0" "platforms;android-35" > /dev/null
 
+      - name: Testes da lógica
+        run: |
+          mkdir -p build/test
+          javac -encoding UTF-8 -d build/test src/pt/relacoes/core/*.java test/*.java
+          java -cp build/test CoreTest | tee build/test/out.txt
+          grep -q "ALL PASS" build/test/out.txt
+
       - name: Compilar APK de preview sem assinatura
         run: UNSIGNED=1 bash ./build.sh
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Amigos-apk-preview-unsigned
-          path: build/Amigos-unsigned.apk
+          name: Relacoes-apk-preview-unsigned
+          path: build/Relacoes-unsigned.apk
           if-no-files-found: error
 
   signed-preview:
@@ -58,6 +65,13 @@ jobs:
       - name: Instalar Android SDK (build-tools e plataforma)
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0" "platforms;android-35" > /dev/null
+
+      - name: Testes da lógica
+        run: |
+          mkdir -p build/test
+          javac -encoding UTF-8 -d build/test src/pt/relacoes/core/*.java test/*.java
+          java -cp build/test CoreTest | tee build/test/out.txt
+          grep -q "ALL PASS" build/test/out.txt
 
       - name: Repor a chave de assinatura
         env:
@@ -78,8 +92,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Amigos-apk-assinado
-          path: build/Amigos.apk
+          name: Relacoes-apk-assinado
+          path: build/Relacoes.apk
           if-no-files-found: error
 
       - name: Remover chave temporária
@@ -103,6 +117,13 @@ jobs:
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0" "platforms;android-35" > /dev/null
 
+      - name: Testes da lógica
+        run: |
+          mkdir -p build/test
+          javac -encoding UTF-8 -d build/test src/pt/relacoes/core/*.java test/*.java
+          java -cp build/test CoreTest | tee build/test/out.txt
+          grep -q "ALL PASS" build/test/out.txt
+
       - name: Repor a chave de assinatura
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -122,8 +143,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Amigos-apk-release
-          path: build/Amigos.apk
+          name: Relacoes-apk-release
+          path: build/Relacoes.apk
           if-no-files-found: error
 
       - name: Remover chave temporária
@@ -139,15 +160,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: Amigos-apk-release
+          name: Relacoes-apk-release
           path: build
 
       - name: Publicar release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/Amigos.apk "Amigos-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "Amigos-${GITHUB_REF_NAME}.apk" \
+          cp build/Relacoes.apk "Relacoes-${GITHUB_REF_NAME}.apk"
+          gh release create "$GITHUB_REF_NAME" "Relacoes-${GITHUB_REF_NAME}.apk" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Amigos $GITHUB_REF_NAME" \
+            --title "Relações $GITHUB_REF_NAME" \
             --generate-notes

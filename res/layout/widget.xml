@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_bg" android:padding="14dp">
+    <TextView android:id="@+id/header" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:textStyle="bold" android:textSize="16sp" android:textColor="@color/text"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Há mais tempo sem contacto" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/accent"/>
+    <TextView android:id="@+id/pempty" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:text="Ainda sem pessoas" android:textColor="@color/text2" android:textSize="13sp"/>
+    <LinearLayout android:id="@+id/prow0" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:id="@+id/pdot0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="●" android:textSize="11sp" android:layout_marginEnd="8dp" android:textColor="@color/accent"/>
+        <TextView android:id="@+id/pname0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/pinfo0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/prow1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:id="@+id/pdot1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="●" android:textSize="11sp" android:layout_marginEnd="8dp" android:textColor="@color/accent"/>
+        <TextView android:id="@+id/pname1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/pinfo1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/prow2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:id="@+id/pdot2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="●" android:textSize="11sp" android:layout_marginEnd="8dp" android:textColor="@color/accent"/>
+        <TextView android:id="@+id/pname2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/pinfo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Próximos aniversários" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/accent"/>
+    <TextView android:id="@+id/bempty" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:text="Nenhum nos próximos 60 dias" android:textColor="@color/text2" android:textSize="13sp"/>
+    <LinearLayout android:id="@+id/brow0" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🎂" android:textSize="11sp" android:layout_marginEnd="6dp"/>
+        <TextView android:id="@+id/bname0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/binfo0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/brow1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🎂" android:textSize="11sp" android:layout_marginEnd="6dp"/>
+        <TextView android:id="@+id/bname1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/binfo1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/brow2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp" android:gravity="center_vertical" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🎂" android:textSize="11sp" android:layout_marginEnd="6dp"/>
+        <TextView android:id="@+id/bname2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/binfo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text2" android:textSize="12sp" android:layout_marginStart="8dp"/>
+    </LinearLayout>
+</LinearLayout>

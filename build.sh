@@ -1,15 +1,15 @@
 #!/bin/bash
-# Amigos — build sem Gradle: aapt2 -> javac -> d8/dx -> zipalign -> apksigner
+# Relacoes — build sem Gradle: aapt2 -> javac -> d8/dx -> zipalign -> apksigner
 #
 # Usa o Android SDK se ANDROID_HOME estiver definido (ex.: GitHub Actions);
-# caso contrário usa ferramentas locais em $AMIGOS_TOOLS (ambiente onde a app foi criada).
+# caso contrário usa ferramentas locais em $RELACOES_TOOLS (ambiente onde a app foi criada).
 #
-# Assinatura: KEYSTORE (ficheiro, por defeito release.jks), KS_PASS e KS_ALIAS (por defeito "amigos").
-# Preview sem chave: UNSIGNED=1 gera build/Amigos-unsigned.apk (não instalável até ser assinado).
+# Assinatura: KEYSTORE (ficheiro, por defeito release.jks), KS_PASS e KS_ALIAS (por defeito "relacoes").
+# Preview sem chave: UNSIGNED=1 gera build/Relacoes-unsigned.apk (não instalável até ser assinado).
 set -e
 cd "$(dirname "$0")"
 KEYSTORE=${KEYSTORE:-release.jks}
-KS_ALIAS=${KS_ALIAS:-amigos}
+KS_ALIAS=${KS_ALIAS:-relacoes}
 OUT=build/out
 rm -rf $OUT && mkdir -p $OUT/cls $OUT/gen $OUT/dex
 
@@ -19,7 +19,7 @@ if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME/build-tools" ]; then
   AAPT2="$BT/aapt2"; D8="$BT/d8"; APKSIGNER="$BT/apksigner"
   echo "SDK: $BT · $AJAR"
 else
-  T=${AMIGOS_TOOLS:-/home/claude/tools}
+  T=${RELACOES_TOOLS:-/home/claude/tools}
   AAPT2=$T/aaptjs3-2.0.2/package/bin/x64/linux/aapt2
   AJAR=$T/android-35.jar
   DX="java -cp $T/d2j/dex-tools-v2.4/lib/dx-30.0.2.jar com.android.dx.command.Main"
@@ -37,15 +37,15 @@ fi
 python3 tools/zipalign.py $OUT/base.apk $OUT/aligned.apk classes.dex=$OUT/dex/classes.dex
 
 if [ "${UNSIGNED:-0}" = "1" ]; then
-  cp $OUT/aligned.apk build/Amigos-unsigned.apk
-  echo "APK de preview sem assinatura: build/Amigos-unsigned.apk"
+  cp $OUT/aligned.apk build/Relacoes-unsigned.apk
+  echo "APK de preview sem assinatura: build/Relacoes-unsigned.apk"
   exit 0
 fi
 
 if [ ! -f "$KEYSTORE" ]; then
   echo "Aviso: $KEYSTORE não existe — a criar uma chave nova (as atualizações têm de usar sempre a mesma chave)."
   keytool -genkeypair -keystore "$KEYSTORE" -storepass "${KS_PASS:?Defina KS_PASS}" -keypass "$KS_PASS" -alias "$KS_ALIAS" \
-    -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Amigos, C=PT"
+    -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Relacoes, C=PT"
 fi
-$APKSIGNER sign --ks "$KEYSTORE" --ks-pass "pass:${KS_PASS:?Defina KS_PASS}" --ks-key-alias "$KS_ALIAS" --out build/Amigos.apk $OUT/aligned.apk
-$APKSIGNER verify build/Amigos.apk && ls -la build/Amigos.apk
+$APKSIGNER sign --ks "$KEYSTORE" --ks-pass "pass:${KS_PASS:?Defina KS_PASS}" --ks-key-alias "$KS_ALIAS" --out build/Relacoes.apk $OUT/aligned.apk
+$APKSIGNER verify build/Relacoes.apk && ls -la build/Relacoes.apk

@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Amigos</string>
+    <string name="app_name">Relações</string>
+    <string name="widget_desc">Pessoas há mais tempo sem contacto e próximos aniversários</string>
 </resources>

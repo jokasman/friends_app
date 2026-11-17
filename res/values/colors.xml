@@ -1,16 +1,21 @@
 <resources>
-    <color name="bg">#ECEEF4</color>
+    <color name="bg">#FFF8F0</color>
     <color name="surface">#FFFFFF</color>
-    <color name="cardStroke">#DDE1EA</color>
-    <color name="text">#1B1D23</color>
-    <color name="text2">#5F6675</color>
-    <color name="accent">#3D5AFE</color>
-    <color name="accentSoft">#E3E8FF</color>
+    <color name="cardStroke">#F6E2D2</color>
+    <color name="text">#3B2A25</color>
+    <color name="text2">#7E5E52</color>
+    <color name="accent">#B24A2E</color>
+    <color name="accentSoft">#FFE3D6</color>
     <color name="onAccent">#FFFFFF</color>
-    <color name="danger">#E53935</color>
-    <color name="dangerSoft">#FDECEC</color>
-    <color name="divider">#E4E7EE</color>
-    <color name="chip">#EEF0F5</color>
-    <color name="warnSoft">#FFF4DD</color>
-    <color name="warn">#9A6400</color>
+    <color name="danger">#C8372A</color>
+    <color name="dangerSoft">#FDE2DC</color>
+    <color name="divider">#F3E3D6</color>
+    <color name="chip">#FFEFE4</color>
+    <color name="warnSoft">#FFF0C2</color>
+    <color name="warn">#7A5208</color>
+    <color name="hero">#FF9A76</color>
+    <color name="heroText">#3A1408</color>
+    <color name="heroTrack">#FFC2A8</color>
+    <color name="heroRing">#FFF8F0</color>
+    <color name="sun">#FFC857</color>
 </resources>

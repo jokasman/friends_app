@@ -1,4 +1,4 @@
-# Relações
+# Círculo
 
 App Android nativa para manter contacto com as pessoas que lhe importam, pessoais ou profissionais. A app não obriga a nada, mas incentiva o contacto com lembretes, sugestões e ações rápidas. Funciona sem internet, não tem publicidade e os dados ficam no telemóvel. Requer Android 8.0 ou superior.
 
@@ -31,7 +31,7 @@ App Android nativa para manter contacto com as pessoas que lhe importam, pessoai
 - **Preferências e ideias de prenda** por pessoa, mostradas nos avisos de aniversário.
 - **Resumo mensal**: notificação no dia 1 e ecrã com quem contactou, quem ficou atrasado, aniversários do mês seguinte e evolução das metas.
 - **Cópia de segurança**: a cópia automática do Android guarda os dados no Google Drive da conta Google do telemóvel e repõe-nos ao reinstalar ou num telemóvel novo, sem login na app. Há também exportação e restauro manual em JSON, com as fotos incluídas; o Google Drive pode ser escolhido como destino.
-- Tema claro, escuro ou automático.
+- Visual quente (coral, creme e amarelo) com a letra Nunito, e tema claro, escuro ou automático.
 
 ## Ecrãs
 
@@ -95,3 +95,7 @@ java -cp build/test CoreTest
 - Deteção automática de chamadas, SMS ou mensagens de outras apps.
 - Geração de mensagens com IA.
 - Login Google e Drive API: substituídos pela cópia automática do Android e pela exportação manual (não precisam de configuração no Google Cloud).
+
+## Créditos
+
+Letra Nunito © The Nunito Project Authors, licença SIL Open Font License 1.1 (`fonts/OFL-Nunito.txt`).

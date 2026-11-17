@@ -27,6 +27,20 @@ public final class Ui {
 
     public static int col(Context c, int res) { return c.getColor(res); }
 
+    /** Letra da app (Nunito): 400 normal, 700 negrito, 800 títulos. */
+    private static Typeface regular, bold, extra;
+
+    public static Typeface font(Context c, int weight) {
+        try {
+            if (weight >= 800) { if (extra == null) extra = c.getResources().getFont(R.font.nunito_extrabold); return extra; }
+            if (weight >= 600) { if (bold == null) bold = c.getResources().getFont(R.font.nunito_bold); return bold; }
+            if (regular == null) regular = c.getResources().getFont(R.font.nunito_regular);
+            return regular;
+        } catch (RuntimeException e) {
+            return Typeface.create("sans-serif", weight >= 600 ? Typeface.BOLD : Typeface.NORMAL);
+        }
+    }
+
     public static GradientDrawable round(int color, float radiusPx) {
         GradientDrawable g = new GradientDrawable();
         g.setColor(color);
@@ -50,7 +64,7 @@ public final class Ui {
         t.setText(s);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         t.setTextColor(col(c, colorRes));
-        if (bold) t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(font(c, bold ? (sp >= 18 ? 800 : 700) : 400));
         return t;
     }
 
@@ -107,9 +121,8 @@ public final class Ui {
     public static LinearLayout card(Context c) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(stroke(col(c, R.color.surface), col(c, R.color.cardStroke), Math.max(1, dp(c, 1)), dp(c, 20)));
+        l.setBackground(stroke(col(c, R.color.surface), col(c, R.color.cardStroke), Math.max(1, dp(c, 1)), dp(c, 24)));
         l.setPadding(dp(c, 18), dp(c, 16), dp(c, 18), dp(c, 18));
-        l.setElevation(dp(c, 1));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.setMargins(dp(c, 14), dp(c, 8), dp(c, 14), dp(c, 8));
         l.setLayoutParams(lp);

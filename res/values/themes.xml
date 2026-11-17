@@ -10,9 +10,11 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text2</item>
+        <item name="android:fontFamily">@font/nunito</item>
     </style>
     <style name="DialogTheme" parent="@android:style/Theme.Material.Light.Dialog.NoActionBar">
         <item name="android:colorAccent">@color/accent</item>
+        <item name="android:fontFamily">@font/nunito</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowMinWidthMajor">88%</item>
         <item name="android:windowMinWidthMinor">92%</item>

@@ -82,7 +82,8 @@ public final class Views {
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(Ui.dp(a, back ? 4 : 18), Ui.dp(a, 8), Ui.dp(a, 8), Ui.dp(a, 4));
         if (back) bar.addView(Ui.iconButton(a, R.drawable.ic_back, "Voltar", v -> a.finish()));
-        TextView t = Ui.text(a, title, back ? 20 : 26, R.color.text, true);
+        TextView t = Ui.text(a, title, back ? 20 : 28, R.color.text, true);
+        t.setTypeface(Ui.font(a, 800));
         t.setTag("title");
         Ui.ellipsize(t, 1);
         t.setPadding(Ui.dp(a, back ? 6 : 0), 0, 0, 0);
@@ -98,6 +99,7 @@ public final class Views {
         e.setTextColor(Ui.col(c, R.color.text));
         e.setHintTextColor(Ui.col(c, R.color.text2));
         e.setTextSize(16);
+        e.setTypeface(Ui.font(c, 400));
         e.setBackground(Ui.round(Ui.col(c, R.color.chip), Ui.dp(c, 14)));
         e.setPadding(Ui.dp(c, 14), Ui.dp(c, 12), Ui.dp(c, 14), Ui.dp(c, 12));
         LinearLayout.LayoutParams lp = Ui.lpMW();

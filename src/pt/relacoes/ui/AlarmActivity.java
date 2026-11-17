@@ -82,7 +82,7 @@ public class AlarmActivity extends BaseActivity {
 
         long now = System.currentTimeMillis();
         TextView clock = white(Fmt.time(now), 72);
-        clock.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        clock.setTypeface(Ui.font(this, 400));
         content.addView(clock);
         Calendar cal = Calendar.getInstance();
         String[] wd = {"domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"};
@@ -97,7 +97,7 @@ public class AlarmActivity extends BaseActivity {
             content.addView(av, alp);
         }
         TextView title = white(t[0], 26);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        title.setTypeface(Ui.font(this, 800));
         title.setPadding(0, dp(18), 0, dp(8));
         content.addView(title);
         TextView sub = white(t[2], 16);
@@ -165,6 +165,7 @@ public class AlarmActivity extends BaseActivity {
         t.setTextSize(sp);
         t.setTextColor(0xFFFFFFFF);
         t.setGravity(Gravity.CENTER);
+        t.setTypeface(Ui.font(this, 600));
         return t;
     }
 
@@ -173,7 +174,7 @@ public class AlarmActivity extends BaseActivity {
         b.setText(label);
         b.setTextSize(18);
         b.setTextColor(fg);
-        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        b.setTypeface(Ui.font(this, 800));
         b.setGravity(Gravity.CENTER);
         b.setPadding(dp(16), dp(18), dp(16), dp(18));
         b.setBackground(Ui.ripple(this, Ui.round(bg, dp(32)), dp(32)));

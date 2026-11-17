@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -67,30 +66,41 @@ final class TodayTab extends MainActivity.Tab {
             return;
         }
 
-        // Meta semanal.
+        // Topo coral: saudação e meta da semana com anel de progresso.
         int[] g = Insights.goal(a);
+        int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        LinearLayout hero = new LinearLayout(a);
+        hero.setGravity(Gravity.CENTER_VERTICAL);
+        hero.setBackground(Ui.round(Ui.col(a, R.color.hero), Ui.dp(a, 32)));
+        hero.setPadding(Ui.dp(a, 22), Ui.dp(a, 20), Ui.dp(a, 18), Ui.dp(a, 20));
+        LinearLayout ht = new LinearLayout(a);
+        ht.setOrientation(LinearLayout.VERTICAL);
+        TextView hi = Ui.text(a, hour < 13 ? "Bom dia!" : hour < 20 ? "Boa tarde!" : "Boa noite!", 15, R.color.heroText, true);
+        hi.setTypeface(Ui.font(a, 700));
+        ht.addView(hi);
+        String headline = g[0] == 0 ? "Com quem vai falar hoje?"
+                : g[0] + (g[0] == 1 ? " pessoa contactada" : " pessoas contactadas") + " esta semana";
+        TextView big = Ui.text(a, headline, 24, R.color.heroText, true);
+        big.setPadding(0, Ui.dp(a, 2), 0, Ui.dp(a, 4));
+        ht.addView(big);
         if (g[1] > 0) {
-            LinearLayout card = Ui.card(a);
-            card.addView(Ui.cardHeader(a, R.drawable.ic_chart, "Meta da semana"));
-            LinearLayout line = new LinearLayout(a);
-            line.setGravity(Gravity.CENTER_VERTICAL);
-            TextView big = Ui.text(a, g[0] + " / " + g[1], 26, g[0] >= g[1] ? R.color.accent : R.color.text, true);
-            line.addView(big);
-            TextView lbl = Ui.text(a, "  pessoas contactadas", 14, R.color.text2, false);
-            line.addView(lbl, Ui.lpWeight(1));
-            if (g[2] > 0) line.addView(Views.badge(a, "🔥 " + g[2] + (g[2] == 1 ? " semana" : " semanas seguidas"), Views.BADGE_WARN));
-            card.addView(line);
-            ProgressBar pb = new ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
-            pb.setMax(g[1]);
-            pb.setProgress(Math.min(g[0], g[1]));
-            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(Ui.col(a, R.color.accent)));
-            LinearLayout.LayoutParams plp = Ui.lpMW();
-            plp.topMargin = Ui.dp(a, 8);
-            card.addView(pb, plp);
-            if (g[0] < g[1]) card.addView(Views.hint(a, "Faltam " + (g[1] - g[0]) + " para cumprir a meta desta semana."));
-            else card.addView(Views.hint(a, "Meta cumprida esta semana. Muito bem!"));
-            content.addView(card);
+            String sub = g[0] >= g[1] ? "Meta cumprida!" : "Meta: " + g[1] + " por semana";
+            if (g[2] > 0) sub += " · " + g[2] + (g[2] == 1 ? " semana seguida" : " semanas seguidas");
+            TextView st = Ui.text(a, sub, 14, R.color.heroText, false);
+            st.setAlpha(0.85f);
+            ht.addView(st);
         }
+        hero.addView(ht, Ui.lpWeight(1));
+        if (g[1] > 0) {
+            Ring ring = new Ring(a, Ui.col(a, R.color.heroTrack), Ui.col(a, R.color.heroRing), Ui.col(a, R.color.heroText), 8);
+            ring.set(g[0] / (float) g[1], g[0] + "/" + g[1]);
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(Ui.dp(a, 82), Ui.dp(a, 82));
+            rlp.setMarginStart(Ui.dp(a, 12));
+            hero.addView(ring, rlp);
+        }
+        LinearLayout.LayoutParams hlp = Ui.lpMW();
+        hlp.setMargins(Ui.dp(a, 14), Ui.dp(a, 4), Ui.dp(a, 14), Ui.dp(a, 8));
+        content.addView(hero, hlp);
 
         // Sugestões do dia.
         List<Person> sug = Insights.suggestions(a, Math.max(2, Prefs.suggestCount(a)));

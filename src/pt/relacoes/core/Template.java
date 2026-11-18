@@ -16,7 +16,7 @@ public class Template {
 
     /** Substitui as variáveis pelos dados da pessoa. */
     public static String fill(String text, Person p, int age) {
-        String s = text.replace("{primeiro_nome}", p.firstName()).replace("{nome}", p.name.trim());
+        String s = text.replace("{primeiro_nome}", p.callName()).replace("{nome}", p.name.trim());
         return s.replace("{idade}", age > 0 ? String.valueOf(age) : "").replace("  ", " ").replace(" ,", ",").replace(" !", "!");
     }
 

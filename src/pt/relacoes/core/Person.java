@@ -6,6 +6,8 @@ public class Person {
 
     public long id;
     public String name = "", phone = "", email = "", notes = "";
+    /** Como o utilizador lhe chama (ex.: "Zé", "Mãe"); usado nas mensagens. Vazio = primeiro nome. */
+    public String nickname = "";
     /** Nome do ficheiro da foto (pasta privada da app) ou "" sem foto. */
     public String photo = "";
     /** Aniversário: mês 1..12, dia 1..31 (0 = sem); ano 0 = desconhecido. */
@@ -31,6 +33,12 @@ public class Person {
         String n = name == null ? "" : name.trim();
         int i = n.indexOf(' ');
         return i > 0 ? n.substring(0, i) : n;
+    }
+
+    /** Nome a usar nas mensagens: como lhe chama, ou o primeiro nome. */
+    public String callName() {
+        String n = nickname == null ? "" : nickname.trim();
+        return n.isEmpty() ? firstName() : n;
     }
 
     public String initials() {

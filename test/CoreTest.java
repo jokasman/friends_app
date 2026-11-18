@@ -29,6 +29,7 @@ public static void main(String[] a){
   cs.add(new long[]{5,today}); cs.add(new long[]{6,today}); cs.add(new long[]{7,today}); ok(Goals.streak(Goals.perWeek(cs),today,3)==4,"semana atual cumprida");
   Person m=new Person(); m.name="Ana Maria Silva"; ok(Template.fill("Parabéns, {primeiro_nome}! {idade} anos",m,30).equals("Parabéns, Ana! 30 anos"),"variáveis");
   ok(Template.fill("Parabéns pelos {idade} anos, {nome}!",m,0).contains("Ana Maria Silva"),"nome completo");
+  m.nickname="Aninhas"; ok(Template.fill("Olá {primeiro_nome}!",m,0).equals("Olá Aninhas!"),"como lhe chama"); m.nickname="";
   for(Object[] b:Template.BUILTIN) ok(((String)b[2]).length()>10,"modelo");
   List<Person> ps=new ArrayList<>(); Person x=new Person(); x.id=1; x.name="Ana Costa"; x.phone="912 345 678"; ps.add(x);
   Person y=new Person(); y.id=2; y.name="Rui"; ps.add(y); Person z=new Person(); z.id=3; z.name="Rui"; ps.add(z);

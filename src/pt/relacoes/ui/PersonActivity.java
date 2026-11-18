@@ -162,6 +162,7 @@ public class PersonActivity extends BaseActivity {
             info.addView(Ui.optionRow(this, "🎂 " + Fmt.birthday(p), (nb == today ? "É hoje!" : "Faltam " + (nb - today) + " dias")
                     + (age > 0 ? " · faz " + age + " anos" : ""), null));
         }
+        if (!p.nickname.trim().isEmpty()) info.addView(Ui.optionRow(this, p.nickname.trim(), "Como lhe chama (usado nas mensagens)", null));
         if (!p.phone.isEmpty()) info.addView(Ui.optionRow(this, p.phone, "Telefone", null));
         if (!p.email.isEmpty()) info.addView(Ui.optionRow(this, p.email, "Email", null));
         info.addView(Ui.optionRow(this, Fmt.everyName(p.everyDays), "Frequência de contacto", null));

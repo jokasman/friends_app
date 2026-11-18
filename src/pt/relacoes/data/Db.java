@@ -31,7 +31,7 @@ public final class Db extends SQLiteOpenHelper {
         return inst;
     }
 
-    private Db(Context c) { super(c, "relacoes.db", null, 4); }
+    private Db(Context c) { super(c, "relacoes.db", null, 5); }
 
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(false); }
 
@@ -39,7 +39,7 @@ public final class Db extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE people (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, photo TEXT, phone TEXT, email TEXT,"
                 + " notes TEXT, bmonth INTEGER DEFAULT 0, bday INTEGER DEFAULT 0, byear INTEGER DEFAULT 0, every INTEGER DEFAULT 0,"
                 + " bday_on_day INTEGER DEFAULT 1, bday_before INTEGER DEFAULT 0, long_msg INTEGER DEFAULT 0, tone INTEGER DEFAULT 0,"
-                + " likes TEXT, avoid TEXT, created INTEGER DEFAULT 0, last_at INTEGER DEFAULT 0, last_medium INTEGER DEFAULT -1)");
+                + " likes TEXT, avoid TEXT, created INTEGER DEFAULT 0, last_at INTEGER DEFAULT 0, last_medium INTEGER DEFAULT -1, nickname TEXT)");
         db.execSQL("CREATE TABLE groups_ (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color INTEGER, sort INTEGER DEFAULT 0)");
         db.execSQL("CREATE TABLE person_groups (person INTEGER NOT NULL, grp INTEGER NOT NULL, PRIMARY KEY (person, grp))");
         db.execSQL("CREATE TABLE interactions (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, at INTEGER NOT NULL,"
@@ -69,6 +69,7 @@ public final class Db extends SQLiteOpenHelper {
             db.execSQL("UPDATE reminders SET alarm = 1 WHERE kind IN (0, 1, 3) AND auto <> 4");
         }
         if (o < 4) createDetections(db);
+        if (o < 5) db.execSQL("ALTER TABLE people ADD COLUMN nickname TEXT");
     }
 
     private static void createDetections(SQLiteDatabase db) {
@@ -90,7 +91,7 @@ public final class Db extends SQLiteOpenHelper {
     // ---------------------------------------------------------------- Pessoas
 
     private static final String P_COLS = "id, name, photo, phone, email, notes, bmonth, bday, byear, every, bday_on_day, bday_before,"
-            + " long_msg, tone, likes, avoid, created, last_at, last_medium";
+            + " long_msg, tone, likes, avoid, created, last_at, last_medium, nickname";
 
     private static Person person(Cursor c) {
         Person p = new Person();
@@ -98,7 +99,7 @@ public final class Db extends SQLiteOpenHelper {
         p.email = nz(c.getString(4)); p.notes = nz(c.getString(5)); p.bMonth = c.getInt(6); p.bDay = c.getInt(7); p.bYear = c.getInt(8);
         p.everyDays = c.getInt(9); p.bdayOnDay = c.getInt(10) != 0; p.bdayBefore = c.getInt(11); p.longMessages = c.getInt(12) != 0;
         p.tone = c.getInt(13); p.likes = nz(c.getString(14)); p.avoid = nz(c.getString(15)); p.created = c.getLong(16);
-        p.lastAt = c.getLong(17); p.lastMedium = c.getInt(18);
+        p.lastAt = c.getLong(17); p.lastMedium = c.getInt(18); p.nickname = nz(c.getString(19));
         return p;
     }
 
@@ -133,7 +134,7 @@ public final class Db extends SQLiteOpenHelper {
         v.put("bday_on_day", p.bdayOnDay ? 1 : 0); v.put("bday_before", p.bdayBefore); v.put("long_msg", p.longMessages ? 1 : 0);
         v.put("tone", p.tone); v.put("likes", p.likes); v.put("avoid", p.avoid);
         if (p.created == 0) p.created = System.currentTimeMillis();
-        v.put("created", p.created); v.put("last_at", p.lastAt); v.put("last_medium", p.lastMedium);
+        v.put("created", p.created); v.put("last_at", p.lastAt); v.put("last_medium", p.lastMedium); v.put("nickname", p.nickname);
         if (p.id > 0) getWritableDatabase().update("people", v, "id=?", a(p.id));
         else p.id = getWritableDatabase().insert("people", null, v);
         return p.id;

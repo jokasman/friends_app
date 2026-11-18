@@ -39,7 +39,7 @@ public class EditPersonActivity extends BaseActivity {
     private Person p;
     private int oldM, oldD, oldY;
     private String oldPhoto;
-    private EditText name, phone, email, notes, likes, avoid;
+    private EditText name, nickname, phone, email, notes, likes, avoid;
     private TextView bday;
     private FrameLayout photoBox;
     private LinearLayout groupsBox, bdayBox;
@@ -89,6 +89,12 @@ public class EditPersonActivity extends BaseActivity {
         phone = Views.input(this, "Telefone", p.phone, InputType.TYPE_CLASS_PHONE);
         email = Views.input(this, "Email", p.email, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         who.addView(name);
+        nickname = Views.input(this, "Como lhe chama (ex.: Zé, Mãe, Dr. Silva)", p.nickname,
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        who.addView(nickname);
+        TextView nh = Views.hint(this, "Usado nas mensagens sugeridas. Se ficar vazio, usa o primeiro nome.");
+        nh.setPadding(Ui.dp(this, 2), 0, 0, Ui.dp(this, 10));
+        who.addView(nh);
         who.addView(phone);
         who.addView(email);
         content.addView(who);
@@ -281,6 +287,7 @@ public class EditPersonActivity extends BaseActivity {
             return;
         }
         p.name = n;
+        p.nickname = nickname.getText().toString().trim();
         p.phone = phone.getText().toString().trim();
         p.email = email.getText().toString().trim();
         p.notes = notes.getText().toString().trim();

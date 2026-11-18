@@ -57,7 +57,7 @@ final class TemplatesTab extends MainActivity.Tab {
             if (n == 0) card.addView(Views.empty(a, "Nenhum modelo. Toque em + para criar."));
             content.addView(card);
         }
-        content.addView(Views.hint(a, "    Variáveis: {nome}, {primeiro_nome} e {idade}. Toque num modelo para o editar ou apagar."));
+        content.addView(Views.hint(a, "    Variáveis: {nome} (nome completo), {primeiro_nome} (como lhe chama, ou o primeiro nome) e {idade}. Toque num modelo para o editar ou apagar."));
     }
 
     static void edit(BaseActivity a, Template t, int defType, Runnable after) {
@@ -73,7 +73,7 @@ final class TemplatesTab extends MainActivity.Tab {
         EditText text = Views.multiline(a, "Texto da mensagem. Ex.: Parabéns, {primeiro_nome}!", m.text);
         text.setMinLines(4);
         box.addView(text);
-        box.addView(Views.hint(a, "Variáveis: {nome}, {primeiro_nome}, {idade}"));
+        box.addView(Views.hint(a, "Variáveis: {nome}, {primeiro_nome} (como lhe chama), {idade}"));
         ScrollView sv = new ScrollView(a);
         sv.addView(box);
         AlertDialog.Builder b = new AlertDialog.Builder(a).setTitle(t == null ? "Novo modelo" : "Editar modelo").setView(sv)

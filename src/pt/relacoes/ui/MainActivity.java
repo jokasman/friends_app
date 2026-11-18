@@ -97,6 +97,7 @@ public class MainActivity extends BaseActivity {
 
     @Override protected void onResume() {
         super.onResume();
+        pt.relacoes.notify.Detect.rebind(this);
         if (firstResume) { firstResume = false; return; }
         if (current != null) current.refresh();
     }

@@ -15,13 +15,27 @@ import java.util.List;
  */
 public class ContactListener extends NotificationListenerService {
 
+    @Override public void onListenerConnected() {
+        pt.relacoes.data.Prefs.setStr(getApplicationContext(), "detect_connected", String.valueOf(System.currentTimeMillis()));
+        pt.relacoes.data.Prefs.setStr(getApplicationContext(), "detect_disconnected", "");
+    }
+
+    @Override public void onListenerDisconnected() {
+        pt.relacoes.data.Prefs.setStr(getApplicationContext(), "detect_disconnected", String.valueOf(System.currentTimeMillis()));
+    }
+
     @Override public void onNotificationPosted(StatusBarNotification sbn) {
         try {
             if (sbn == null || getPackageName().equals(sbn.getPackageName())) return;
             Notification n = sbn.getNotification();
             if (n == null || (n.flags & Notification.FLAG_GROUP_SUMMARY) != 0) return;
             int medium = Detect.medium(sbn.getPackageName(), n.category);
-            if (medium < 0) return;
+            if (medium < 0) {
+                // Só para o diagnóstico: a app, sem título nem texto.
+                Detect.log(getApplicationContext(), System.currentTimeMillis(), Detect.appName(getApplicationContext(), sbn.getPackageName()),
+                        "", "App não vigiada");
+                return;
+            }
             Bundle e = n.extras;
             if (e == null) return;
             List<String> senders = new ArrayList<>();
@@ -44,7 +58,11 @@ public class ContactListener extends NotificationListenerService {
             add(senders, e.getCharSequence(Notification.EXTRA_TITLE_BIG));
             // Nas chamadas, o nome ou número vem muitas vezes no texto.
             if (medium == pt.relacoes.core.Interaction.CALL) add(senders, e.getCharSequence(Notification.EXTRA_TEXT));
-            if (senders.isEmpty()) return;
+            if (senders.isEmpty()) {
+                Detect.log(getApplicationContext(), System.currentTimeMillis(), Detect.appName(getApplicationContext(), sbn.getPackageName()),
+                        "", "Sem nome de remetente na notificação");
+                return;
+            }
             final int med = medium;
             final String pkg = sbn.getPackageName();
             final long when = System.currentTimeMillis();

@@ -118,11 +118,38 @@ public class SettingsActivity extends BaseActivity {
                 () -> startActivity(pt.relacoes.notify.Detect.settingsIntent())));
         dc.addView(Ui.subLabel(this, "Quando deteta um contacto"));
         dc.addView(Views.chooser(this, new String[]{"Perguntar", "Registar logo"}, Prefs.detectMode(this), k -> Prefs.setDetectMode(this, k)));
-        if (detOn) {
-            TextView off = Ui.button(this, "Desligar acesso às notificações", false);
-            off.setOnClickListener(v -> startActivity(pt.relacoes.notify.Detect.settingsIntent()));
-            dc.addView(off, Ui.lpMW());
+        long conn = pt.relacoes.notify.Detect.connectedAt(this);
+        String disc = Prefs.str(this, "detect_disconnected");
+        boolean linked = detOn && conn > 0 && (disc == null || disc.isEmpty());
+        dc.addView(check("Serviço de leitura", linked, "Ligado desde " + Fmt.when(conn, System.currentTimeMillis()),
+                detOn ? "O Android ainda não o ligou — veja a nota abaixo e reinicie o telemóvel se persistir"
+                        : "Desligado (precisa do acesso às notificações)",
+                () -> { pt.relacoes.notify.Detect.rebind(this); render(); }));
+        if (!detOn || !linked) {
+            dc.addView(Views.hint(this, "Android 13 ou mais recente: em apps instaladas fora da Play Store o acesso às notificações "
+                    + "fica bloqueado (\"definição restrita\"). Abra Informações da app › menu ⋮ › \"Permitir definições restritas\" "
+                    + "e depois volte a ativar o acesso às notificações."));
+            TextView info = Ui.button(this, "Abrir informações da app", false);
+            info.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))));
+            LinearLayout.LayoutParams ilp = Ui.lpMW();
+            ilp.topMargin = Ui.dp(this, 8);
+            dc.addView(info, ilp);
         }
+        dc.addView(Ui.divider(this));
+        dc.addView(Ui.subLabel(this, "Últimas notificações vistas"));
+        java.util.List<String[]> log = pt.relacoes.notify.Detect.recent(this);
+        if (log.isEmpty()) dc.addView(Views.hint(this, detOn ? "Ainda nenhuma. Peça a alguém do círculo para lhe enviar uma mensagem."
+                : "Nenhuma — o acesso às notificações está desligado."));
+        for (String[] e : log) {
+            dc.addView(Ui.optionRow(this, e[1] + (e[2].isEmpty() ? "" : " · " + e[2]), e[0] + " — " + e[3], null));
+        }
+        dc.addView(Views.hint(this, "Para ser reconhecida, a pessoa tem de ter na ficha o mesmo nome completo que aparece na notificação "
+                + "(ex.: no WhatsApp) ou o mesmo número de telefone."));
+        TextView refresh = Ui.button(this, "Atualizar", false);
+        refresh.setOnClickListener(v -> render());
+        LinearLayout.LayoutParams rlp2 = Ui.lpMW();
+        rlp2.topMargin = Ui.dp(this, 8);
+        dc.addView(refresh, rlp2);
         content.addView(dc);
 
         // Despertador.

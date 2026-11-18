@@ -81,29 +81,82 @@ public final class Detect {
 
     /** Chamado pelo serviço com os textos de uma notificação (remetentes possíveis). */
     static void handle(Context c, String pkg, int medium, List<String> senders, long when) {
+        String app = appName(c, pkg);
+        String who = senders.isEmpty() ? "" : senders.get(0);
         Names.Index ix = index(c);
         long person = 0;
         for (String s : senders) {
             person = ix.match(s);
             if (person != 0) break;
         }
-        if (person == 0) return;
+        if (person == 0) { log(c, when, app, who, "Sem correspondência com ninguém do círculo"); return; }
         Db db = Db.get(c);
         long since = when - WINDOW;
-        if (db.detectedSince(person, medium, since)) return;
         Person p = db.person(person);
         if (p == null) return;
+        if (db.detectedSince(person, medium, since)) { log(c, when, app, who, "Já detetado nas últimas 6 h (" + p.name + ")"); return; }
         // Já registou um contacto com esta pessoa há pouco: não duplica.
-        if (p.lastAt >= since) return;
-        String app = appName(c, pkg);
+        if (p.lastAt >= since) { log(c, when, app, who, "Contacto com " + p.name + " registado há menos de 6 h"); return; }
         if (Prefs.detectMode(c) == 1) {
             db.addDetection(person, when, medium, app, Db.DET_ACCEPTED);
             Engine.contacted(c, interaction(person, when, medium, app), 0, 0);
+            log(c, when, app, who, "Registado: " + p.name);
         } else {
             db.addDetection(person, when, medium, app, Db.DET_PENDING);
             notifyPending(c);
             Engine.reschedule(c);
+            log(c, when, app, who, "Por confirmar em Hoje: " + p.name);
         }
+    }
+
+    // ------------------------------------------------------------------ Diagnóstico
+
+    private static final int LOG_MAX = 15;
+
+    /** Guarda as últimas notificações vistas (app, remetente e resultado; nunca o conteúdo). */
+    static synchronized void log(Context c, long when, String app, String who, String result) {
+        try {
+            org.json.JSONArray old = new org.json.JSONArray(Prefs.str(c, "detect_log") == null ? "[]" : Prefs.str(c, "detect_log"));
+            org.json.JSONArray out = new org.json.JSONArray();
+            org.json.JSONObject o = new org.json.JSONObject();
+            o.put("t", when); o.put("app", app); o.put("who", who); o.put("res", result);
+            out.put(o);
+            for (int i = 0; i < old.length() && out.length() < LOG_MAX; i++) {
+                org.json.JSONObject e = old.getJSONObject(i);
+                // Não repete a mesma app sem remetente seguida (apps não vigiadas).
+                if (who.isEmpty() && e.optString("who").isEmpty() && e.optString("app").equals(app) && i == 0) continue;
+                out.put(e);
+            }
+            Prefs.setStr(c, "detect_log", out.toString());
+        } catch (org.json.JSONException ignored) { }
+    }
+
+    /** Últimas entradas: {hora, app, remetente, resultado}. */
+    public static List<String[]> recent(Context c) {
+        List<String[]> out = new java.util.ArrayList<>();
+        try {
+            org.json.JSONArray a = new org.json.JSONArray(Prefs.str(c, "detect_log") == null ? "[]" : Prefs.str(c, "detect_log"));
+            for (int i = 0; i < a.length(); i++) {
+                org.json.JSONObject o = a.getJSONObject(i);
+                out.add(new String[]{pt.relacoes.core.Fmt.when(o.optLong("t"), System.currentTimeMillis()), o.optString("app"),
+                        o.optString("who"), o.optString("res")});
+            }
+        } catch (org.json.JSONException ignored) { }
+        return out;
+    }
+
+    /** Hora em que o Android ligou o serviço de leitura (0 = nunca). */
+    public static long connectedAt(Context c) {
+        String s = Prefs.str(c, "detect_connected");
+        try { return s == null ? 0 : Long.parseLong(s); } catch (NumberFormatException e) { return 0; }
+    }
+
+    /** Pede ao Android para voltar a ligar o serviço (útil depois de atualizar a app). */
+    public static void rebind(Context c) {
+        if (!enabled(c)) return;
+        try {
+            android.service.notification.NotificationListenerService.requestRebind(new ComponentName(c, ContactListener.class));
+        } catch (RuntimeException ignored) { }
     }
 
     static Interaction interaction(long person, long at, int medium, String app) {

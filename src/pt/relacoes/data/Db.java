@@ -132,6 +132,7 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public void deletePerson(long id) {
+        stamp++;
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
         try {
@@ -146,6 +147,19 @@ public final class Db extends SQLiteOpenHelper {
 
     // ---------------------------------------------------------------- Grupos
 
+    /** Muda sempre que os grupos ou as pertenças mudam (para as caches de cores). */
+    public static volatile int stamp;
+
+    /** Cor de cada pessoa: a do seu primeiro grupo (pela ordem dos grupos). Pessoas sem grupo não aparecem. */
+    public Map<Long, Integer> personColors() {
+        Map<Long, Integer> m = new HashMap<>();
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT pg.person, g.color FROM person_groups pg JOIN groups_ g ON g.id = pg.grp"
+                + " ORDER BY g.sort DESC, g.name DESC", null)) {
+            while (c.moveToNext()) m.put(c.getLong(0), c.getInt(1)); // o último a escrever é o primeiro grupo
+        }
+        return m;
+    }
+
     public List<Group> groups() {
         List<Group> out = new ArrayList<>();
         try (Cursor c = getReadableDatabase().rawQuery("SELECT id, name, color, sort FROM groups_ ORDER BY sort, name", null)) {
@@ -159,6 +173,7 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public long save(Group g) {
+        stamp++;
         ContentValues v = new ContentValues();
         v.put("name", g.name); v.put("color", g.color); v.put("sort", g.sort);
         if (g.id > 0) getWritableDatabase().update("groups_", v, "id=?", a(g.id));
@@ -167,6 +182,7 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public void deleteGroup(long id) {
+        stamp++;
         getWritableDatabase().delete("person_groups", "grp=?", a(id));
         getWritableDatabase().delete("groups_", "id=?", a(id));
     }
@@ -193,6 +209,7 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public void setGroups(long person, List<Long> groups) {
+        stamp++;
         SQLiteDatabase db = getWritableDatabase();
         db.delete("person_groups", "person=?", a(person));
         for (Long g : groups) {

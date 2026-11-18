@@ -65,6 +65,7 @@ public final class Backup {
         JSONObject tables = root.getJSONObject("tables");
         SQLiteDatabase db = Db.get(c).raw();
         int people = 0;
+        Db.stamp++;
         db.beginTransaction();
         try {
             for (String t : TABLES) {

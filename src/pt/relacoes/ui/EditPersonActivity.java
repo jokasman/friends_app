@@ -152,6 +152,7 @@ public class EditPersonActivity extends BaseActivity {
         Person tmp = new Person();
         tmp.name = name == null || name.getText().toString().trim().isEmpty() ? "?" : name.getText().toString();
         tmp.photo = p.photo;
+        tmp.id = p.id;
         photoBox.addView(Views.avatar(this, tmp, 92, -1));
         android.widget.ImageView cam = Ui.icon(this, R.drawable.ic_camera, R.color.onAccent, 30, 6);
         cam.setBackground(Ui.round(Ui.col(this, R.color.accent), Ui.dp(this, 15)));

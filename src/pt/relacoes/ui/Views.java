@@ -30,6 +30,21 @@ public final class Views {
 
     private static final int[] AVATAR = {0xFF3D5AFE, 0xFF00897B, 0xFFE65100, 0xFF8E24AA, 0xFFC62828, 0xFF2E7D32, 0xFF0277BD, 0xFFAD1457};
 
+    private static java.util.Map<Long, Integer> groupColors;
+    private static int colorsStamp = -1;
+
+    /** Cor do círculo da pessoa: a cor do seu grupo; sem grupo, um tom neutro quente. */
+    static int personColor(Context c, Person p) {
+        if (groupColors == null || colorsStamp != pt.relacoes.data.Db.stamp) {
+            colorsStamp = pt.relacoes.data.Db.stamp;
+            groupColors = pt.relacoes.data.Db.get(c).personColors();
+        }
+        Integer col = groupColors.get(p.id);
+        return col != null ? col : NO_GROUP;
+    }
+
+    static final int NO_GROUP = 0xFF9C877C;
+
     static int avatarColor(String name) {
         int h = name == null ? 0 : name.trim().toLowerCase().hashCode();
         return AVATAR[Math.floorMod(h, AVATAR.length)];
@@ -65,7 +80,7 @@ public final class Views {
             t.setGravity(Gravity.CENTER);
             GradientDrawable g = new GradientDrawable();
             g.setShape(GradientDrawable.OVAL);
-            g.setColor(avatarColor(p.name));
+            g.setColor(personColor(c, p));
             t.setBackground(g);
             face = t;
         }

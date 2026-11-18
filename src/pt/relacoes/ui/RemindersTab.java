@@ -52,8 +52,8 @@ final class RemindersTab extends MainActivity.Tab {
             else later.add(r);
         }
         if (late.isEmpty() && week.isEmpty() && later.isEmpty()) {
+            content.addView(Ui.heading(a, "Sem lembretes"));
             LinearLayout c = Ui.card(a);
-            c.addView(Ui.cardHeader(a, R.drawable.ic_notif, "Sem lembretes"));
             c.addView(Views.empty(a, "Os lembretes de aniversário e de manter contacto aparecem aqui automaticamente. "
                     + "Também pode criar os seus: \"comprar prenda\", \"agendar jantar\", \"devolver o livro\"…"));
             content.addView(c);
@@ -66,10 +66,24 @@ final class RemindersTab extends MainActivity.Tab {
 
     private void section(String title, int icon, List<Reminder> rs, Map<Long, Person> people, long now) {
         if (rs.isEmpty()) return;
-        LinearLayout c = Ui.card(a);
-        c.addView(Ui.cardHeader(a, icon, title + " (" + rs.size() + ")"));
-        for (Reminder r : rs) c.addView(row(a, r, people.get(r.personId), now, this::refresh));
-        content.addView(c);
+        content.addView(Ui.heading(a, title + " (" + rs.size() + ")"));
+        for (Reminder r : rs) content.addView(card(a, r, people.get(r.personId), now, this::refresh));
+    }
+
+    /** Lembrete num cartão próprio, com botão redondo "Feito". */
+    static View card(BaseActivity a, Reminder r, Person p, long now, Runnable after) {
+        String title = r.kind == Reminder.KEEP ? "Falar com " + p.name : p.firstName() + " · " + r.text;
+        if (r.kind == Reminder.BIRTHDAY && r.isManaged()) title = r.text;
+        String sub = Fmt.when(r.dueAt, now);
+        if (r.kind == Reminder.REPEAT) sub += " · " + r.repeatText();
+        if (r.kind == Reminder.BIRTHDAY && r.offsetDays > 0) sub += " · " + r.offsetDays + " dias antes";
+        if (r.alarm) sub += " · despertador";
+        boolean overdue = r.dueAt <= now;
+        LinearLayout row = Views.personCard(a, p, -1, sub, overdue ? "Atrasado" : null, Views.BADGE_DANGER,
+                R.drawable.ic_check, "Feito", v -> Auth.confirmDone(a, r, () -> { Engine.done(a, r.id); after.run(); }),
+                v -> a.startActivity(new Intent(a, ReminderActivity.class).putExtra(PersonActivity.EXTRA_REMINDER, r.id)));
+        ((android.widget.TextView) ((LinearLayout) row.getChildAt(1)).getChildAt(0)).setText(title);
+        return row;
     }
 
     /** Linha de lembrete com botão "Feito". */

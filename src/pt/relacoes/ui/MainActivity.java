@@ -28,7 +28,7 @@ public class MainActivity extends BaseActivity {
     private int tab = TAB_TODAY;
     private TextView title;
     private FrameLayout body;
-    private LinearLayout nav;
+    private LinearLayout nav, bar;
     private ImageView fab;
     private Tab current;
 
@@ -49,7 +49,7 @@ public class MainActivity extends BaseActivity {
 
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout bar = Views.topBar(this, "", false);
+        bar = Views.topBar(this, "", false);
         title = bar.findViewWithTag("title");
         bar.addView(Ui.iconButton(this, R.drawable.ic_chart, "Resumo mensal", v -> startActivity(new Intent(this, SummaryActivity.class))));
         bar.addView(Ui.iconButton(this, R.drawable.ic_settings, "Definições", v -> startActivity(new Intent(this, SettingsActivity.class))));
@@ -58,18 +58,20 @@ public class MainActivity extends BaseActivity {
         FrameLayout mid = new FrameLayout(this);
         body = new FrameLayout(this);
         mid.addView(body, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        fab = Ui.icon(this, R.drawable.ic_add, R.color.onAccent, 60, 16);
-        fab.setBackground(Ui.ripple(this, Ui.round(Ui.col(this, R.color.accent), Ui.dp(this, 20)), Ui.dp(this, 20)));
-        fab.setElevation(Ui.dp(this, 6));
-        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(Ui.dp(this, 60), Ui.dp(this, 60), Gravity.BOTTOM | Gravity.END);
+        fab = Ui.icon(this, R.drawable.ic_add, R.color.onAccent, 56, 15);
+        fab.setBackground(Ui.ripple(this, Ui.round(Ui.col(this, R.color.accent), Ui.dp(this, 28)), Ui.dp(this, 28)));
+        fab.setElevation(Ui.dp(this, 3));
+        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(Ui.dp(this, 56), Ui.dp(this, 56), Gravity.BOTTOM | Gravity.END);
         flp.setMargins(0, 0, Ui.dp(this, 18), Ui.dp(this, 18));
         mid.addView(fab, flp);
         col.addView(mid, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
 
+        View line = new View(this);
+        line.setBackgroundColor(Ui.col(this, R.color.cardStroke));
+        col.addView(line, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, Ui.dp(this, 1.5f))));
         nav = new LinearLayout(this);
         nav.setBackgroundColor(Ui.col(this, R.color.surface));
-        nav.setElevation(Ui.dp(this, 8));
-        nav.setPadding(0, Ui.dp(this, 6), 0, Ui.dp(this, 6));
+        nav.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
         col.addView(nav, Ui.lpMW());
         setContentView(col);
 
@@ -107,6 +109,9 @@ public class MainActivity extends BaseActivity {
     void show(int t) {
         tab = t;
         title.setText(TITLES[t]);
+        // No Hoje, o topo coral (com logótipo e definições) substitui a barra e pinta a barra de estado.
+        bar.setVisibility(t == TAB_TODAY ? View.GONE : View.VISIBLE);
+        getWindow().setStatusBarColor(Ui.col(this, t == TAB_TODAY ? R.color.hero : R.color.bg));
         switch (t) {
             case TAB_PEOPLE: current = new PeopleTab(this); break;
             case TAB_REMINDERS: current = new RemindersTab(this); break;

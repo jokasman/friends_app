@@ -142,6 +142,37 @@ public final class Views {
         return row;
     }
 
+    /**
+     * Cartão de pessoa ao estilo do Círculo: avatar com anel de saúde, nome, subtítulo e, opcionalmente,
+     * um destaque e um botão redondo de ação à direita.
+     */
+    static LinearLayout personCard(Context c, Person p, int health, String sub, String badge, int badgeKind,
+                                   int actionIcon, String actionDesc, View.OnClickListener action, View.OnClickListener open) {
+        LinearLayout row = Ui.itemCard(c, R.color.surface);
+        row.addView(avatar(c, p, 52, health));
+        LinearLayout txt = new LinearLayout(c);
+        txt.setOrientation(LinearLayout.VERTICAL);
+        txt.setPadding(Ui.dp(c, 12), 0, Ui.dp(c, 8), 0);
+        TextView n = Ui.text(c, p.name, 16, R.color.text, true);
+        n.setTypeface(Ui.font(c, 800));
+        Ui.ellipsize(n, 1);
+        txt.addView(n);
+        if (sub != null && !sub.isEmpty()) {
+            TextView s = Ui.text(c, sub, 13, R.color.text2, false);
+            Ui.ellipsize(s, 2);
+            txt.addView(s);
+        }
+        row.addView(txt, Ui.lpWeight(1));
+        if (badge != null) {
+            TextView b = badge(c, badge, badgeKind);
+            ((LinearLayout.LayoutParams) b.getLayoutParams()).setMarginEnd(Ui.dp(c, 8));
+            row.addView(b);
+        }
+        if (action != null) row.addView(Ui.roundAction(c, actionIcon, actionDesc, action));
+        if (open != null) row.setOnClickListener(open);
+        return row;
+    }
+
     static final int BADGE_ACCENT = 0, BADGE_WARN = 1, BADGE_DANGER = 2;
 
     static TextView badge(Context c, String text, int kind) {

@@ -112,9 +112,11 @@ final class PeopleTab extends MainActivity.Tab {
                 return x.name.compareToIgnoreCase(y.name);
             });
         }
-        LinearLayout card = Ui.card(a);
-        card.addView(Ui.sectionLabel(a, ps.size() + (ps.size() == 1 ? " pessoa" : " pessoas")));
+        TextView count = Ui.text(a, ps.size() + (ps.size() == 1 ? " pessoa" : " pessoas"), 14, R.color.text2, true);
+        count.setPadding(Ui.dp(a, 20), Ui.dp(a, 6), Ui.dp(a, 20), Ui.dp(a, 4));
+        list.addView(count);
         if (ps.isEmpty()) {
+            LinearLayout card = Ui.card(a);
             card.addView(Views.empty(a, db.people().isEmpty() ? "Ainda não adicionou ninguém." : "Ninguém corresponde ao filtro."));
             if (db.people().isEmpty()) {
                 card.addView(Ui.spacer(a, 12));
@@ -122,15 +124,17 @@ final class PeopleTab extends MainActivity.Tab {
                 imp.setOnClickListener(v -> a.startActivity(new Intent(a, ImportActivity.class)));
                 card.addView(imp, Ui.lpMW());
             }
+            list.addView(card);
         }
         for (Person p : ps) {
             int h = Insights.health(p, today);
-            String sub = p.lastAt > 0 ? Fmt.date(p.lastAt, System.currentTimeMillis()) + " (" + Fmt.ago(today - pt.relacoes.core.Days.of(p.lastAt)) + ")"
+            String sub = p.lastAt > 0 ? Fmt.ago(today - pt.relacoes.core.Days.of(p.lastAt)).replaceFirst("^h", "H")
                     + (p.lastMedium >= 0 ? " · " + Interaction.mediumName(p.lastMedium) : "") : "Sem contactos registados";
             String badge = h == Health.RED ? "Em atraso" : h == Health.YELLOW ? "Em breve" : null;
-            card.addView(Views.personRow(a, p, h, sub, badge, h == Health.RED ? Views.BADGE_DANGER : Views.BADGE_WARN,
+            int medium = TodayTab.quickMedium(p);
+            list.addView(Views.personCard(a, p, h, sub, badge, h == Health.RED ? Views.BADGE_DANGER : Views.BADGE_WARN,
+                    TodayTab.mediumIcon(medium), "Contactar " + p.firstName(), v -> Contacting.start(a, p, medium, 0),
                     v -> a.startActivity(new Intent(a, PersonActivity.class).putExtra(PersonActivity.EXTRA_PERSON, p.id))));
         }
-        list.addView(card);
     }
 }

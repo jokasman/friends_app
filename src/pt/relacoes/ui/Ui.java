@@ -118,15 +118,53 @@ public final class Ui {
         return t;
     }
 
+    /** Fundo de cartão do Círculo: superfície com cantos de 24 dp e uma "sombra" suave de 2 dp em baixo. */
+    public static Drawable soft(Context c, int fillRes, float radiusDp) {
+        float r = dp(c, radiusDp);
+        android.graphics.drawable.LayerDrawable ld = new android.graphics.drawable.LayerDrawable(new Drawable[]{
+                round(col(c, R.color.cardStroke), r), round(col(c, fillRes), r)});
+        ld.setLayerInset(1, 0, 0, 0, dp(c, 2));
+        return ld;
+    }
+
     public static LinearLayout card(Context c) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(stroke(col(c, R.color.surface), col(c, R.color.cardStroke), Math.max(1, dp(c, 1)), dp(c, 24)));
+        l.setBackground(soft(c, R.color.surface, 24));
         l.setPadding(dp(c, 18), dp(c, 16), dp(c, 18), dp(c, 18));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(dp(c, 14), dp(c, 8), dp(c, 14), dp(c, 8));
+        lp.setMargins(dp(c, 16), dp(c, 6), dp(c, 16), dp(c, 6));
         l.setLayoutParams(lp);
         return l;
+    }
+
+    /** Cartão de um item (pessoa, lembrete): linha horizontal com fundo de cartão. */
+    public static LinearLayout itemCard(Context c, int fillRes) {
+        LinearLayout l = new LinearLayout(c);
+        l.setGravity(Gravity.CENTER_VERTICAL);
+        l.setBackground(ripple(c, soft(c, fillRes, 24), dp(c, 24)));
+        l.setPadding(dp(c, 14), dp(c, 12), dp(c, 12), dp(c, 14));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(dp(c, 16), dp(c, 5), dp(c, 16), dp(c, 5));
+        l.setLayoutParams(lp);
+        return l;
+    }
+
+    /** Título de secção fora dos cartões ("Sugestões para hoje"). */
+    public static TextView heading(Context c, String s) {
+        TextView t = text(c, s, 18, R.color.text, true);
+        t.setPadding(dp(c, 20), dp(c, 18), dp(c, 20), dp(c, 6));
+        t.setLayoutParams(lpMW());
+        return t;
+    }
+
+    /** Botão redondo com ícone (ação rápida). */
+    public static ImageView roundAction(Context c, int iconRes, String desc, View.OnClickListener l) {
+        ImageView iv = icon(c, iconRes, R.color.accent, 44, 11);
+        iv.setBackground(ripple(c, round(col(c, R.color.accentSoft), dp(c, 22)), dp(c, 22)));
+        iv.setContentDescription(desc);
+        iv.setOnClickListener(l);
+        return iv;
     }
 
     public static TextView sectionLabel(Context c, String s) {
@@ -137,16 +175,12 @@ public final class Ui {
     }
 
     /** Cabeçalho de cartão: ícone num círculo suave + título. Separa claramente cada bloco. */
+    /** Cabeçalho de cartão: título em texto simples (o ícone é mantido na assinatura mas já não se desenha). */
     public static LinearLayout cardHeader(Context c, int iconRes, String title) {
         LinearLayout h = new LinearLayout(c);
         h.setGravity(Gravity.CENTER_VERTICAL);
-        h.setPadding(0, 0, 0, dp(c, 14));
-        ImageView ic = icon(c, iconRes, R.color.accent, 34, 7);
-        ic.setBackground(round(col(c, R.color.accentSoft), dp(c, 12)));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(c, 34), dp(c, 34));
-        lp.setMarginEnd(dp(c, 12));
-        h.addView(ic, lp);
-        TextView t = text(c, title, 17, R.color.text, true);
+        h.setPadding(0, 0, 0, dp(c, 10));
+        TextView t = text(c, title, 18, R.color.text, true);
         h.addView(t, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         return h;
     }

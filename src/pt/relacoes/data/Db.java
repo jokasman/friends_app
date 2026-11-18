@@ -31,7 +31,7 @@ public final class Db extends SQLiteOpenHelper {
         return inst;
     }
 
-    private Db(Context c) { super(c, "relacoes.db", null, 3); }
+    private Db(Context c) { super(c, "relacoes.db", null, 4); }
 
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(false); }
 
@@ -51,6 +51,7 @@ public final class Db extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE templates (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, size INTEGER, text TEXT, builtin INTEGER DEFAULT 0)");
         db.execSQL("CREATE TABLE relations (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, other INTEGER NOT NULL, kind INTEGER)");
         db.execSQL("CREATE TABLE gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, text TEXT, done INTEGER DEFAULT 0, created INTEGER)");
+        createDetections(db);
         String[] gs = {"Família", "Amigos", "Trabalho"};
         for (int i = 0; i < gs.length; i++) {
             ContentValues v = new ContentValues();
@@ -67,6 +68,12 @@ public final class Db extends SQLiteOpenHelper {
             // Aniversários e lembretes criados à mão passam a tocar como despertador.
             db.execSQL("UPDATE reminders SET alarm = 1 WHERE kind IN (0, 1, 3) AND auto <> 4");
         }
+        if (o < 4) createDetections(db);
+    }
+
+    private static void createDetections(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS detections (id INTEGER PRIMARY KEY AUTOINCREMENT, person INTEGER NOT NULL, at INTEGER NOT NULL,"
+                + " medium INTEGER, app TEXT, status INTEGER DEFAULT 0)");
     }
 
     static void seedTemplates(SQLiteDatabase db) {
@@ -119,6 +126,7 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public long save(Person p) {
+        stamp++;
         ContentValues v = new ContentValues();
         v.put("name", p.name); v.put("photo", p.photo); v.put("phone", p.phone); v.put("email", p.email); v.put("notes", p.notes);
         v.put("bmonth", p.bMonth); v.put("bday", p.bDay); v.put("byear", p.bYear); v.put("every", p.everyDays);
@@ -441,6 +449,68 @@ public final class Db extends SQLiteOpenHelper {
     }
 
     public void deleteGift(long id) { getWritableDatabase().delete("gifts", "id=?", a(id)); }
+
+    // ---------------------------------------------------------------- Contactos detetados (notificações)
+
+    public static final int DET_PENDING = 0, DET_ACCEPTED = 1, DET_DISMISSED = 2;
+
+    public static final class Detection {
+        public long id, personId, at;
+        public int medium, status;
+        public String app = "";
+    }
+
+    public long addDetection(long person, long at, int medium, String app, int status) {
+        ContentValues v = new ContentValues();
+        v.put("person", person); v.put("at", at); v.put("medium", medium); v.put("app", app); v.put("status", status);
+        return getWritableDatabase().insert("detections", null, v);
+    }
+
+    /** Já houve deteção desta pessoa por este meio desde "since"? */
+    public boolean detectedSince(long person, int medium, long since) {
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT 1 FROM detections WHERE person=? AND medium=? AND at>=? LIMIT 1",
+                new String[]{"" + person, "" + medium, "" + since})) {
+            return c.moveToFirst();
+        }
+    }
+
+    public List<Detection> pendingDetections() {
+        List<Detection> out = new ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT id, person, at, medium, app, status FROM detections WHERE status=0 ORDER BY at DESC", null)) {
+            while (c.moveToNext()) {
+                Detection d = new Detection();
+                d.id = c.getLong(0); d.personId = c.getLong(1); d.at = c.getLong(2); d.medium = c.getInt(3); d.app = nz(c.getString(4)); d.status = c.getInt(5);
+                out.add(d);
+            }
+        }
+        return out;
+    }
+
+    public Detection detection(long id) {
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT id, person, at, medium, app, status FROM detections WHERE id=?", a(id))) {
+            if (!c.moveToFirst()) return null;
+            Detection d = new Detection();
+            d.id = c.getLong(0); d.personId = c.getLong(1); d.at = c.getLong(2); d.medium = c.getInt(3); d.app = nz(c.getString(4)); d.status = c.getInt(5);
+            return d;
+        }
+    }
+
+    public void setDetectionStatus(long id, int status) {
+        ContentValues v = new ContentValues();
+        v.put("status", status);
+        getWritableDatabase().update("detections", v, "id=?", a(id));
+    }
+
+    /** Fecha as pendentes de uma pessoa (ex.: já registou o contacto à mão) e limpa as antigas. */
+    public void closeDetections(long person) {
+        ContentValues v = new ContentValues();
+        v.put("status", DET_DISMISSED);
+        getWritableDatabase().update("detections", v, "person=? AND status=0", a(person));
+    }
+
+    public void purgeDetections(long before) {
+        getWritableDatabase().delete("detections", "at<?", new String[]{"" + before});
+    }
 
     // ---------------------------------------------------------------- Cópia de segurança
 

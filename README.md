@@ -6,6 +6,10 @@ App Android nativa para manter contacto com as pessoas que lhe importam, pessoai
 
 - **Pessoas**: criadas à mão ou importadas dos contactos do telemóvel (opcional), com foto, telefone, email, aniversário, notas e grupos (Família, Amigos, Trabalho… configuráveis; uma pessoa pode estar em vários). A lista mostra a data e o meio do último contacto, filtra por grupo, pesquisa e ordena por tempo sem contacto.
 - **Registo de contactos**: data (pode ser passada), meio (chamada, SMS, WhatsApp, Facebook, Messenger, Instagram, pessoalmente, email, outro) e nota. O histórico fica na ficha da pessoa.
+- **Deteção de contactos recebidos** (opcional, com acesso às notificações): reconhece mensagens e chamadas de pessoas do círculo no WhatsApp, SMS, chamadas, Messenger, Instagram, Telegram, email e outras apps.
+  - A correspondência é feita pelo nome completo ou pelo número de telefone.
+  - Pode perguntar antes de registar, com um cartão em Hoje, ou registar logo.
+  - O conteúdo das mensagens não é lido nem guardado, e o que o utilizador envia não é detetado.
 - **Lembretes (modelo unificado)**: únicos ou recorrentes, com texto livre, vários por pessoa. Insistem com a periodicidade escolhida até serem marcados como feitos, sem insistir durante a noite. A notificação tem as ações **Feito**, **Adiar** e **Já falei**.
   - **Manter contacto**: frequência por pessoa (ex.: mensal). O prazo conta a partir do último contacto registado. Em "Já falei" indica-se a data real e o meio, e o próximo aviso é recalculado.
   - **Aniversários**: aviso no próprio dia e/ou X dias antes, configurável por pessoa, e lembretes extra com texto próprio (ex.: comprar prenda 7 dias antes). Insistem até serem feitos. 29 de fevereiro conta como 28 nos anos comuns.
@@ -92,7 +96,7 @@ java -cp build/test CoreTest
 
 ## Fora do âmbito da v1
 
-- Deteção automática de chamadas, SMS ou mensagens de outras apps.
+- Deteção de contactos enviados pelo utilizador (o Android só mostra notificações do que é recebido).
 - Geração de mensagens com IA.
 - Login Google e Drive API: substituídos pela cópia automática do Android e pela exportação manual (não precisam de configuração no Google Cloud).
 

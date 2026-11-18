@@ -119,6 +119,7 @@ public final class Engine {
     public static void contacted(Context c, Interaction i, long reminderId, int followUpDays) {
         Db db = Db.get(c);
         db.add(i);
+        db.closeDetections(i.personId);
         for (Reminder f : db.reminders(i.personId)) {
             if (f.auto != Reminder.AUTO_FOLLOWUP || f.done || f.id == reminderId) continue;
             f.done = true; f.doneAt = System.currentTimeMillis(); f.nextAt = Long.MAX_VALUE;
@@ -280,6 +281,7 @@ public final class Engine {
         Db db = Db.get(c);
         for (Person p : db.people()) if (p.everyDays > 0) syncPerson(c, p, false);
         db.purgeDone(System.currentTimeMillis() - 90L * Days.DAY_MS);
+        db.purgeDetections(System.currentTimeMillis() - 30L * Days.DAY_MS);
         if (Prefs.suggestions(c)) Notify.suggestions(c);
         if (Prefs.monthly(c) && Calendar.getInstance().get(Calendar.DAY_OF_MONTH) == 1) Notify.monthly(c);
         reschedule(c);

@@ -30,5 +30,14 @@ public static void main(String[] a){
   Person m=new Person(); m.name="Ana Maria Silva"; ok(Template.fill("Parabéns, {primeiro_nome}! {idade} anos",m,30).equals("Parabéns, Ana! 30 anos"),"variáveis");
   ok(Template.fill("Parabéns pelos {idade} anos, {nome}!",m,0).contains("Ana Maria Silva"),"nome completo");
   for(Object[] b:Template.BUILTIN) ok(((String)b[2]).length()>10,"modelo");
+  List<Person> ps=new ArrayList<>(); Person x=new Person(); x.id=1; x.name="Ana Costa"; x.phone="912 345 678"; ps.add(x);
+  Person y=new Person(); y.id=2; y.name="Rui"; ps.add(y); Person z=new Person(); z.id=3; z.name="Rui"; ps.add(z);
+  Person w=new Person(); w.id=4; w.name="João Matos"; ps.add(w);
+  Names.Index ix=new Names.Index(ps);
+  ok(ix.match("Ana Costa")==1,"nome exato"); ok(ix.match("ana  costa (3 mensagens)")==1,"contador");
+  ok(ix.match("Família: Ana Costa")==1,"grupo"); ok(ix.match("Ana")==0,"só primeiro nome não");
+  ok(ix.match("+351 912 345 678")==1,"telefone"); ok(ix.match("Rui")==0,"nome repetido não");
+  ok(ix.match("Joao Matos")==4,"sem acentos"); ok(ix.match("Ana Costa Silva")==0,"nome diferente");
+  ok(ix.match("Chamada não atendida")==0,"texto de sistema");
   System.out.println(f==0?"ALL PASS":"FAIL "+f);
 }}

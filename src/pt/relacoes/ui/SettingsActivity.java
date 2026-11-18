@@ -106,6 +106,25 @@ public class SettingsActivity extends BaseActivity {
         // Fiabilidade.
         content.addView(reliability());
 
+        // Deteção automática de contactos.
+        LinearLayout dc = Ui.card(this);
+        dc.addView(Ui.cardHeader(this, R.drawable.ic_people, "Detetar contactos recebidos"));
+        boolean detOn = pt.relacoes.notify.Detect.enabled(this);
+        dc.addView(Ui.text(this, "Com acesso às notificações, a app reconhece mensagens e chamadas recebidas de pessoas do seu círculo "
+                + "(WhatsApp, SMS, chamadas, Messenger, Instagram, Telegram, email…). Compara o nome completo ou o número de telefone; "
+                + "o conteúdo das mensagens não é lido nem guardado. O que envia não é detetado.", 14, R.color.text2, false));
+        dc.addView(Ui.spacer(this, 10));
+        dc.addView(check("Acesso às notificações", detOn, "Ativo", "Desligado — toque em Corrigir para ativar",
+                () -> startActivity(pt.relacoes.notify.Detect.settingsIntent())));
+        dc.addView(Ui.subLabel(this, "Quando deteta um contacto"));
+        dc.addView(Views.chooser(this, new String[]{"Perguntar", "Registar logo"}, Prefs.detectMode(this), k -> Prefs.setDetectMode(this, k)));
+        if (detOn) {
+            TextView off = Ui.button(this, "Desligar acesso às notificações", false);
+            off.setOnClickListener(v -> startActivity(pt.relacoes.notify.Detect.settingsIntent()));
+            dc.addView(off, Ui.lpMW());
+        }
+        content.addView(dc);
+
         // Despertador.
         LinearLayout al = Ui.card(this);
         al.addView(Ui.cardHeader(this, R.drawable.ic_bell, "Despertador"));

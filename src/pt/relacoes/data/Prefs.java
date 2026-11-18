@@ -86,6 +86,10 @@ public final class Prefs {
     public static boolean showPending(Context c) { return sp(c).getBoolean("show_pending", true); }
     public static void setShowPending(Context c, boolean v) { sp(c).edit().putBoolean("show_pending", v).apply(); }
 
+    /** Contactos detetados pelas notificações: 0 = perguntar, 1 = registar logo. */
+    public static int detectMode(Context c) { return sp(c).getInt("detect_mode", 0); }
+    public static void setDetectMode(Context c, int v) { sp(c).edit().putInt("detect_mode", v).apply(); }
+
     public static String str(Context c, String key) { return sp(c).getString(key, null); }
     public static void setStr(Context c, String key, String v) { sp(c).edit().putString(key, v).apply(); }
 

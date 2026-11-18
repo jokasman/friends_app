@@ -69,6 +69,29 @@ final class TodayTab extends MainActivity.Tab {
             return;
         }
 
+        // Contactos detetados pelas notificações, por confirmar.
+        List<Db.Detection> det = db.pendingDetections();
+        if (!det.isEmpty()) {
+            content.addView(Ui.heading(a, "Contactos detetados"));
+            for (Db.Detection d : det) {
+                Person p = people.get(d.personId);
+                if (p == null) continue;
+                String sub = (d.medium == Interaction.CALL ? "Chamada" : "Mensagem por " + Interaction.mediumName(d.medium))
+                        + " · " + Fmt.when(d.at, now);
+                LinearLayout card = Views.personCard(a, p, -1, sub, null, 0, R.drawable.ic_check, "Registar contacto",
+                        v -> { pt.relacoes.notify.Detect.accept(a, d.id); refresh(); }, v -> openPerson(p.id, 0));
+                android.widget.ImageView no = Ui.iconButton(a, R.drawable.ic_close, "Ignorar", v -> {
+                    pt.relacoes.notify.Detect.dismiss(a, d.id);
+                    refresh();
+                });
+                card.addView(no, card.getChildCount() - 1);
+                content.addView(card);
+            }
+            TextView hint = Views.hint(a, "Toque em ✓ para registar no histórico (contacto recebido) ou em ✕ para ignorar.");
+            hint.setPadding(dp(22), dp(2), dp(22), 0);
+            content.addView(hint);
+        }
+
         // Sugestões do dia: um cartão por pessoa, com botão de contacto direto.
         content.addView(Ui.heading(a, "Sugestões para hoje"));
         List<Person> sug = Insights.suggestions(a, Math.max(2, Prefs.suggestCount(a)));

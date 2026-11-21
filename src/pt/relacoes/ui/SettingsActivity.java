@@ -254,6 +254,13 @@ public class SettingsActivity extends BaseActivity {
                 startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
             }
         }));
+        String lc = Prefs.str(this, "last_catchup");
+        long lct = 0;
+        try { lct = lc == null ? 0 : Long.parseLong(lc); } catch (NumberFormatException ignored) { }
+        rel.addView(Views.hint(this, lct > 0 ? "Última verificação automática em segundo plano: " + Fmt.when(lct, System.currentTimeMillis())
+                + ". Deve acontecer de ~15 em 15 minutos; se for muito antiga, o sistema está a suspender a app."
+                : "Ainda não houve verificação automática em segundo plano (acontece de ~15 em 15 minutos)."));
+        rel.addView(Views.hint(this, "Dica: ponha o widget Círculo no ecrã principal — ajuda o Android a manter a app ativa."));
         final String mf = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.ROOT);
         if (mf.contains("xiaomi") || mf.contains("redmi") || mf.contains("poco")) {
             TextView xb = Ui.button(this, "Abrir permissões Xiaomi", false);

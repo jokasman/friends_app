@@ -28,7 +28,15 @@ public class Widget extends AppWidgetProvider {
     private static final int[] B_NAME = {R.id.bname0, R.id.bname1, R.id.bname2};
     private static final int[] B_INFO = {R.id.binfo0, R.id.binfo1, R.id.binfo2};
 
-    @Override public void onUpdate(Context c, AppWidgetManager m, int[] ids) { update(c, m, ids); }
+    @Override public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
+        update(c, m, ids);
+        // O Android acorda a app para atualizar o widget: aproveita para enviar lembretes que tenham ficado para trás.
+        final Context app = c.getApplicationContext();
+        final PendingResult pr = goAsync();
+        new Thread(() -> {
+            try { pt.relacoes.notify.Engine.catchUp(app); } catch (RuntimeException ignored) { } finally { pr.finish(); }
+        }).start();
+    }
 
     public static void updateAll(Context c) {
         try {

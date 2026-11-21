@@ -223,6 +223,15 @@ public final class Engine {
     // ------------------------------------------------------------------ Alarmes
 
     /** Notifica os lembretes vencidos e marca a próxima insistência. */
+    /**
+     * Rede de segurança (widget e vigilância periódica): envia o que estiver vencido e volta a armar os alarmes,
+     * caso o sistema tenha suspendido a app e falhado um alarme.
+     */
+    public static void catchUp(Context c) {
+        Prefs.setStr(c, "last_catchup", String.valueOf(System.currentTimeMillis()));
+        fire(c);
+    }
+
     static void fire(Context c) {
         long now = System.currentTimeMillis();
         Db db = Db.get(c);
@@ -271,6 +280,7 @@ public final class Engine {
         if (cal.getTimeInMillis() <= System.currentTimeMillis()) cal.add(Calendar.DAY_OF_MONTH, 1);
         setExact(c, am, cal.getTimeInMillis(), pi(c, ACTION_DAILY, 2));
         Widget.updateAll(c);
+        Watchdog.ensure(c);
     }
 
     public static boolean canExact(Context c) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="pt.relacoes"
-    android:versionCode="11" android:versionName="1.7.0">
+    android:versionCode="12" android:versionName="1.7.1">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
@@ -54,6 +54,7 @@
                 <action android:name="android.service.notification.NotificationListenerService"/>
             </intent-filter>
         </service>
+        <service android:name=".notify.Watchdog" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE"/>
         <receiver android:name=".ui.Widget" android:exported="true" android:label="Círculo">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>

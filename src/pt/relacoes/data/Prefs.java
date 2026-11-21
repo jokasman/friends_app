@@ -20,9 +20,9 @@ public final class Prefs {
     public static int quietStart(Context c) { return sp(c).getInt("quiet", 22 * 60); }
     public static void setQuietStart(Context c, int v) { sp(c).edit().putInt("quiet", v).apply(); }
 
-    /** Insistência por defeito (min; 0 = não insiste). */
-    public static int nagDefault(Context c) { return sp(c).getInt("nag", 120); }
-    public static void setNagDefault(Context c, int v) { sp(c).edit().putInt("nag", v).apply(); }
+    /** Repetir a notificação de N em N minutos até ser feito (lembretes novos; 0 = não repete). */
+    public static int nagDefault(Context c) { return sp(c).getInt("nag_min", 5); }
+    public static void setNagDefault(Context c, int v) { sp(c).edit().putInt("nag_min", v).apply(); }
 
     /** Adiar pela notificação (min). */
     public static int snooze(Context c) { return sp(c).getInt("snooze", 60); }
@@ -54,37 +54,6 @@ public final class Prefs {
     /** Pausa noturna das insistências (das quietStart à hora da manhã). */
     public static boolean nightPause(Context c) { return sp(c).getBoolean("night_pause", true); }
     public static void setNightPause(Context c, boolean v) { sp(c).edit().putBoolean("night_pause", v).apply(); }
-
-    // ---------------------------------------------------------------- Despertador
-
-    /** "+N min" no ecrã do alarme e na notificação. */
-    public static int quickSnooze(Context c) { return sp(c).getInt("quick_snooze", 10); }
-    public static void setQuickSnooze(Context c, int v) { sp(c).edit().putInt("quick_snooze", v).apply(); }
-
-    /** Som do despertador (URI) ou null para o alarme do sistema. */
-    public static String alarmSound(Context c) { return sp(c).getString("alarm_sound", null); }
-    public static void setAlarmSound(Context c, String v) { sp(c).edit().putString("alarm_sound", v).apply(); }
-
-    /** Volume próprio do despertador em % (10–100), independente do volume de alarme do sistema. */
-    public static int alarmVolume(Context c) { return sp(c).getInt("alarm_volume", 80); }
-    public static void setAlarmVolume(Context c, int v) { sp(c).edit().putInt("alarm_volume", Math.max(10, Math.min(100, v))).apply(); }
-
-    /** Começar baixo e aumentar até ao volume escolhido. */
-    public static boolean crescendo(Context c) { return sp(c).getBoolean("crescendo", true); }
-    public static void setCrescendo(Context c, boolean v) { sp(c).edit().putBoolean("crescendo", v).apply(); }
-
-    /** Pausa de alarmes entre duas datas (ms; 0 = sem pausa). */
-    public static long pauseStart(Context c) { return sp(c).getLong("pause_start", 0L); }
-    public static long pauseEnd(Context c) { return sp(c).getLong("pause_end", 0L); }
-    public static void setPause(Context c, long start, long end) { sp(c).edit().putLong("pause_start", start).putLong("pause_end", end).apply(); }
-
-    /** Marcar alarmes como feitos só com impressão digital. */
-    public static boolean requireBiometric(Context c) { return sp(c).getBoolean("biometric", true); }
-    public static void setRequireBiometric(Context c, boolean v) { sp(c).edit().putBoolean("biometric", v).apply(); }
-
-    /** Abrir "Por tratar" ao desbloquear o telemóvel. */
-    public static boolean showPending(Context c) { return sp(c).getBoolean("show_pending", true); }
-    public static void setShowPending(Context c, boolean v) { sp(c).edit().putBoolean("show_pending", v).apply(); }
 
     /** Contactos detetados pelas notificações: 0 = perguntar, 1 = registar logo. */
     public static int detectMode(Context c) { return sp(c).getInt("detect_mode", 0); }

@@ -31,7 +31,7 @@ public final class Db extends SQLiteOpenHelper {
         return inst;
     }
 
-    private Db(Context c) { super(c, "relacoes.db", null, 5); }
+    private Db(Context c) { super(c, "relacoes.db", null, 6); }
 
     @Override public void onConfigure(SQLiteDatabase db) { db.setForeignKeyConstraintsEnabled(false); }
 
@@ -70,6 +70,8 @@ public final class Db extends SQLiteOpenHelper {
         }
         if (o < 4) createDetections(db);
         if (o < 5) db.execSQL("ALTER TABLE people ADD COLUMN nickname TEXT");
+        // Sem despertador: o antigo valor por defeito (2 h) passa a 5 min.
+        if (o < 6) db.execSQL("UPDATE reminders SET nag = 5 WHERE nag = 120");
     }
 
     private static void createDetections(SQLiteDatabase db) {
@@ -325,6 +327,13 @@ public final class Db extends SQLiteOpenHelper {
         if (r.id > 0) getWritableDatabase().update("reminders", v, "id=?", a(r.id));
         else r.id = getWritableDatabase().insert("reminders", null, v);
         return r.id;
+    }
+
+    /** Define a repetição de todos os lembretes por fazer; devolve quantos mudaram. */
+    public int setAllNag(int minutes) {
+        ContentValues v = new ContentValues();
+        v.put("nag", minutes);
+        return getWritableDatabase().update("reminders", v, "done=0", null);
     }
 
     public void deleteReminder(long id) { getWritableDatabase().delete("reminders", "id=?", a(id)); }

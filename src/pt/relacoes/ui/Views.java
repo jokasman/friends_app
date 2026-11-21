@@ -250,6 +250,63 @@ public final class Views {
         return box;
     }
 
+    private static final int[] NAG = {0, 5, 10, 15, 30, 60};
+
+    /**
+     * Escolha da repetição da notificação: não repetir, 5/10/15/30/60 min ou outro número de minutos.
+     * Devolve os minutos escolhidos a "onMinutes" (0 = não repete).
+     */
+    static LinearLayout nagChooser(Activity a, int current, Pick onMinutes) {
+        LinearLayout box = new LinearLayout(a);
+        box.setOrientation(LinearLayout.VERTICAL);
+        final int[] cur = {current};
+        Runnable[] draw = new Runnable[1];
+        draw[0] = () -> {
+            box.removeAllViews();
+            boolean preset = false;
+            for (int v : NAG) if (v == cur[0]) preset = true;
+            List<String> labels = new java.util.ArrayList<>();
+            for (int v : NAG) labels.add(v == 0 ? "Não repetir" : v + " min");
+            labels.add(preset ? "Outro…" : "A cada " + cur[0] + " min");
+            LinearLayout line = null;
+            for (int i = 0; i < labels.size(); i++) {
+                if (i % 4 == 0) {
+                    line = new LinearLayout(a);
+                    line.setPadding(0, 0, 0, Ui.dp(a, 8));
+                    box.addView(line);
+                }
+                final int k = i;
+                boolean sel = i < NAG.length ? NAG[i] == cur[0] : !preset;
+                TextView t = Ui.chip(a, labels.get(i), sel, 0);
+                t.setOnClickListener(v -> {
+                    if (k < NAG.length) {
+                        cur[0] = NAG[k];
+                        onMinutes.on(cur[0]);
+                        draw[0].run();
+                        return;
+                    }
+                    EditText in = input(a, "Minutos (1 a 1440)", cur[0] > 0 ? String.valueOf(cur[0]) : "", android.text.InputType.TYPE_CLASS_NUMBER);
+                    LinearLayout wrap = new LinearLayout(a);
+                    wrap.setPadding(Ui.dp(a, 22), Ui.dp(a, 8), Ui.dp(a, 22), 0);
+                    wrap.addView(in, Ui.lpMW());
+                    new android.app.AlertDialog.Builder(a).setTitle("Repetir a cada quantos minutos?").setView(wrap)
+                            .setPositiveButton("OK", (d, w) -> {
+                                try {
+                                    int m = Integer.parseInt(in.getText().toString().trim());
+                                    cur[0] = Math.max(1, Math.min(1440, m));
+                                    onMinutes.on(cur[0]);
+                                } catch (NumberFormatException ignored) { }
+                                draw[0].run();
+                            })
+                            .setNegativeButton("Cancelar", null).show();
+                });
+                line.addView(t);
+            }
+        };
+        draw[0].run();
+        return box;
+    }
+
     static String joinNames(List<String> names) {
         if (names.isEmpty()) return "";
         if (names.size() == 1) return names.get(0);

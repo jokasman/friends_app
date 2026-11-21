@@ -8,7 +8,7 @@ import pt.relacoes.data.Prefs;
 
 /** Recebe alarmes, ações das notificações e eventos do sistema (arranque, mudança de hora). */
 public class Receiver extends BroadcastReceiver {
-    static final String ACTION_DONE = "pt.relacoes.DONE", ACTION_SNOOZE = "pt.relacoes.SNOOZE", ACTION_STOP_TEST = "pt.relacoes.STOP_TEST";
+    static final String ACTION_DONE = "pt.relacoes.DONE", ACTION_SNOOZE = "pt.relacoes.SNOOZE";
     static final String EXTRA_MIN = "min";
     static final String EXTRA_ID = "id";
 
@@ -16,8 +16,6 @@ public class Receiver extends BroadcastReceiver {
         final String a = i.getAction() == null ? "" : i.getAction();
         final long id = i.getLongExtra(EXTRA_ID, 0);
         final int min = i.getIntExtra(EXTRA_MIN, 0);
-        if (Engine.ACTION_TEST.equals(a)) { AlarmService.start(c, AlarmService.TEST_ID); return; }
-        if (ACTION_STOP_TEST.equals(a)) { AlarmService.stop(null); return; }
         final Context app = c.getApplicationContext();
         final PendingResult pr = goAsync();
         new Thread(() -> {

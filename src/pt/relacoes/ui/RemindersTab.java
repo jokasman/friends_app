@@ -77,10 +77,9 @@ final class RemindersTab extends MainActivity.Tab {
         String sub = Fmt.when(r.dueAt, now);
         if (r.kind == Reminder.REPEAT) sub += " · " + r.repeatText();
         if (r.kind == Reminder.BIRTHDAY && r.offsetDays > 0) sub += " · " + r.offsetDays + " dias antes";
-        if (r.alarm) sub += " · despertador";
         boolean overdue = r.dueAt <= now;
         LinearLayout row = Views.personCard(a, p, -1, sub, overdue ? "Atrasado" : null, Views.BADGE_DANGER,
-                R.drawable.ic_check, "Feito", v -> Auth.confirmDone(a, r, () -> { Engine.done(a, r.id); after.run(); }),
+                R.drawable.ic_check, "Feito", v -> { Engine.done(a, r.id); after.run(); },
                 v -> a.startActivity(new Intent(a, ReminderActivity.class).putExtra(PersonActivity.EXTRA_REMINDER, r.id)));
         ((android.widget.TextView) ((LinearLayout) row.getChildAt(1)).getChildAt(0)).setText(title);
         return row;
@@ -98,11 +97,10 @@ final class RemindersTab extends MainActivity.Tab {
                 .putExtra(PersonActivity.EXTRA_REMINDER, r.id)));
         ((android.widget.TextView) ((LinearLayout) row.getChildAt(1)).getChildAt(0)).setText(title);
         if (overdue) row.addView(Views.badge(a, "!", Views.BADGE_DANGER));
-        if (r.alarm) row.addView(Views.badge(a, "⏰", Views.BADGE_ACCENT));
-        row.addView(Ui.iconButton(a, R.drawable.ic_check, "Feito", v -> Auth.confirmDone(a, r, () -> {
+        row.addView(Ui.iconButton(a, R.drawable.ic_check, "Feito", v -> {
             Engine.done(a, r.id);
             after.run();
-        })));
+        }));
         return row;
     }
 }

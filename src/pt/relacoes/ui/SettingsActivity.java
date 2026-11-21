@@ -34,8 +34,6 @@ import pt.relacoes.notify.Notify;
 /** Definições: conta e cópia de segurança, horários das notificações, metas, grupos, modelos e tema. */
 public class SettingsActivity extends BaseActivity {
     private static final int REQ_EXPORT = 1, REQ_IMPORT = 2;
-    private static final int[] NAG = {0, 15, 30, 60, 120, 240, 1440};
-    private static final String[] NAG_N = {"Não", "15 min", "30 min", "1 h", "2 h", "4 h", "1 dia"};
     private static final int[] SNOOZE = {15, 30, 60, 180, 1440};
     private static final String[] SNOOZE_N = {"15 min", "30 min", "1 h", "3 h", "1 dia"};
     private static final int[] GOALS = {0, 2, 3, 5, 7, 10};
@@ -152,60 +150,6 @@ public class SettingsActivity extends BaseActivity {
         dc.addView(refresh, rlp2);
         content.addView(dc);
 
-        // Despertador.
-        LinearLayout al = Ui.card(this);
-        al.addView(Ui.cardHeader(this, R.drawable.ic_bell, "Despertador"));
-        al.addView(Views.hint(this, "Aniversários e lembretes criados à mão tocam como despertador: som de alarme mesmo em silêncio, "
-                + "ecrã inteiro e vibração até marcar como feito ou adiar. Pode mudar isto em cada lembrete."));
-        al.addView(Ui.spacer(this, 6));
-        String snd = Prefs.alarmSound(this);
-        String sndName = "Alarme do sistema";
-        if (snd != null) {
-            try {
-                android.media.Ringtone rt = android.media.RingtoneManager.getRingtone(this, Uri.parse(snd));
-                if (rt != null) sndName = rt.getTitle(this);
-            } catch (Exception ignored) { }
-        }
-        al.addView(Ui.optionRow(this, "Som", sndName, v -> {
-            Intent i = new Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER)
-                    .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_ALARM)
-                    .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
-                    .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
-                    .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, snd == null ? null : Uri.parse(snd));
-            try { startActivityForResult(i, REQ_SOUND); } catch (Exception e) { Toast.makeText(this, "Sem seletor de sons.", Toast.LENGTH_SHORT).show(); }
-        }));
-        al.addView(Ui.subLabel(this, "Volume do despertador: " + Prefs.alarmVolume(this) + "%"));
-        android.widget.SeekBar vol = new android.widget.SeekBar(this);
-        vol.setMax(90);
-        vol.setProgress(Prefs.alarmVolume(this) - 10);
-        final TextView volLabel = (TextView) al.getChildAt(al.getChildCount() - 1);
-        vol.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged(android.widget.SeekBar sb, int pr, boolean user) { volLabel.setText("Volume do despertador: " + (pr + 10) + "%"); }
-            public void onStartTrackingTouch(android.widget.SeekBar sb) { }
-            public void onStopTrackingTouch(android.widget.SeekBar sb) { Prefs.setAlarmVolume(SettingsActivity.this, sb.getProgress() + 10); }
-        });
-        al.addView(vol, Ui.lpMW());
-        al.addView(Views.hint(this, "Usado só por esta app; o volume de alarme do sistema volta ao normal quando o despertador pára."));
-        al.addView(toggle("Volume crescente (começa baixo)", Prefs.crescendo(this), on -> Prefs.setCrescendo(this, on)));
-        al.addView(Ui.subLabel(this, "Botão \"+\" no alarme e no relógio"));
-        al.addView(Views.chooser(this, QUICK_N, Math.max(0, idx(QUICK, Prefs.quickSnooze(this))), k -> Prefs.setQuickSnooze(this, QUICK[k])));
-        al.addView(toggle("Marcar alarmes como feitos só com a impressão digital", Prefs.requireBiometric(this),
-                on -> Prefs.setRequireBiometric(this, on)));
-        al.addView(toggle("Abrir \"Por tratar\" ao desbloquear o telemóvel", Prefs.showPending(this), on -> {
-            Prefs.setShowPending(this, on);
-            pt.relacoes.notify.AlarmService.sync(this);
-        }));
-        al.addView(Ui.divider(this));
-        al.addView(Ui.optionRow(this, "Pausa de alarmes", pauseText(), v -> pauseDialog()));
-        al.addView(Ui.spacer(this, 8));
-        TextView testA = Ui.button(this, "Testar despertador (10 s)", false);
-        testA.setOnClickListener(v -> {
-            Engine.scheduleTest(this, 10_000);
-            Toast.makeText(this, "Ponha o telemóvel em silêncio, bloqueie o ecrã e aguarde 10 segundos", Toast.LENGTH_LONG).show();
-        });
-        al.addView(testA, Ui.lpMW());
-        content.addView(al);
-
         // Horários.
         LinearLayout nf = Ui.card(this);
         nf.addView(Ui.cardHeader(this, R.drawable.ic_notif, "Notificações"));
@@ -219,8 +163,19 @@ public class SettingsActivity extends BaseActivity {
         } else {
             nf.addView(Views.hint(this, "Sem pausa noturna: os lembretes por fazer insistem a qualquer hora."));
         }
-        nf.addView(Ui.subLabel(this, "Insistência por defeito"));
-        nf.addView(Views.chooserWrap(this, NAG_N, Math.max(0, idx(NAG, Prefs.nagDefault(this))), 4, k -> Prefs.setNagDefault(this, NAG[k])));
+        nf.addView(Ui.subLabel(this, "Repetir a notificação até ser feito (lembretes novos)"));
+        nf.addView(Views.nagChooser(this, Prefs.nagDefault(this), m -> Prefs.setNagDefault(this, m)));
+        TextView applyAll = Ui.button(this, "Aplicar aos lembretes existentes", false);
+        applyAll.setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setMessage("Todos os lembretes por fazer passam a repetir a notificação "
+                        + (Prefs.nagDefault(this) > 0 ? "a cada " + Prefs.nagDefault(this) + " min" : "nunca (não repetir)") + ". Continuar?")
+                .setPositiveButton("Aplicar", (d, w) -> {
+                    int n = Db.get(this).setAllNag(Prefs.nagDefault(this));
+                    Engine.reschedule(this);
+                    Toast.makeText(this, n + " lembretes atualizados.", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancelar", null).show());
+        nf.addView(applyAll, Ui.lpMW());
         nf.addView(Ui.subLabel(this, "\"Adiar\" nas notificações normais"));
         nf.addView(Views.chooser(this, SNOOZE_N, Math.max(0, idx(SNOOZE, Prefs.snooze(this))), k -> Prefs.setSnooze(this, SNOOZE[k])));
         nf.addView(Ui.divider(this));
@@ -273,66 +228,7 @@ public class SettingsActivity extends BaseActivity {
         content.addView(ab);
     }
 
-    private static final int REQ_SOUND = 3;
-    private static final int[] QUICK = {5, 10, 15, 30};
-    private static final String[] QUICK_N = {"5 min", "10 min", "15 min", "30 min"};
-
-    private String pauseText() {
-        long s = Prefs.pauseStart(this), e = Prefs.pauseEnd(this), now = System.currentTimeMillis();
-        if (s <= 0 || e <= now) return "Sem pausa. Os alarmes que vencerem durante uma pausa tocam em fila no fim.";
-        return (Engine.pauseActive(this) ? "Em pausa até " : "De " + Fmt.when(s, now) + " até ") + Fmt.when(e, now);
-    }
-
-    /** Pausa única: data e hora de início e de fim. */
-    private void pauseDialog() {
-        final java.util.Calendar start = java.util.Calendar.getInstance(), end = java.util.Calendar.getInstance();
-        long ps = Prefs.pauseStart(this), pe = Prefs.pauseEnd(this);
-        if (ps > 0 && pe > System.currentTimeMillis()) { start.setTimeInMillis(ps); end.setTimeInMillis(pe); }
-        else end.add(java.util.Calendar.HOUR_OF_DAY, 8);
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(Ui.dp(this, 22), Ui.dp(this, 8), Ui.dp(this, 22), 0);
-        TextView sb = Ui.button(this, "", false), eb = Ui.button(this, "", false);
-        Runnable show = () -> {
-            long now = System.currentTimeMillis();
-            sb.setText("Início: " + Fmt.when(start.getTimeInMillis(), now));
-            eb.setText("Fim: " + Fmt.when(end.getTimeInMillis(), now));
-        };
-        show.run();
-        sb.setOnClickListener(v -> pickDateTime(start, show));
-        eb.setOnClickListener(v -> pickDateTime(end, show));
-        box.addView(sb, Ui.lpMW());
-        box.addView(Ui.spacer(this, 8));
-        box.addView(eb, Ui.lpMW());
-        box.addView(Views.hint(this, "Os despertadores não tocam neste intervalo. Quando terminar, os alarmes atrasados tocam em fila."));
-        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle("Pausa de alarmes").setView(box)
-                .setPositiveButton("Guardar", (d, w) -> {
-                    long s = start.getTimeInMillis(), e = end.getTimeInMillis();
-                    if (e <= s || e <= System.currentTimeMillis()) {
-                        Toast.makeText(this, "O fim tem de ser depois do início e no futuro.", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    Engine.setPause(this, s, e);
-                    render();
-                })
-                .setNegativeButton("Cancelar", null);
-        if (ps > 0) b.setNeutralButton("Remover pausa", (d, w) -> { Engine.setPause(this, 0, 0); render(); });
-        b.show();
-    }
-
-    private void pickDateTime(java.util.Calendar cal, Runnable after) {
-        new android.app.DatePickerDialog(this, (dp, y, m, d) -> {
-            cal.set(y, m, d);
-            new TimePickerDialog(this, (tp, h, mi) -> {
-                cal.set(java.util.Calendar.HOUR_OF_DAY, h);
-                cal.set(java.util.Calendar.MINUTE, mi);
-                cal.set(java.util.Calendar.SECOND, 0);
-                after.run();
-            }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), DateFormat.is24HourFormat(this)).show();
-        }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show();
-    }
-
-    /** Verificação de fiabilidade (igual ao Lembra). */
+    /** Verificação de fiabilidade: notificações, alarmes exatos e bateria. */
     private LinearLayout reliability() {
         LinearLayout rel = Ui.card(this);
         rel.addView(Ui.cardHeader(this, R.drawable.ic_check, "Verificação de fiabilidade"));
@@ -341,34 +237,23 @@ public class SettingsActivity extends BaseActivity {
         boolean notif = nm.areNotificationsEnabled();
         boolean exact = Engine.canExact(this);
         boolean battery = pm.isIgnoringBatteryOptimizations(getPackageName());
-        boolean overlay = Settings.canDrawOverlays(this);
-        boolean fs = Build.VERSION.SDK_INT < 34 || nm.canUseFullScreenIntent();
-        int bad = (notif ? 0 : 1) + (exact ? 0 : 1) + (battery ? 0 : 1) + (overlay ? 0 : 1) + (fs ? 0 : 1);
-        TextView score = Ui.text(this, bad == 0 ? "Tudo pronto: os alarmes vão tocar a horas."
+        int bad = (notif ? 0 : 1) + (exact ? 0 : 1) + (battery ? 0 : 1);
+        TextView score = Ui.text(this, bad == 0 ? "Tudo pronto: as notificações vão chegar a horas."
                 : bad + (bad == 1 ? " ponto precisa" : " pontos precisam") + " de atenção.", 15, bad == 0 ? R.color.accent : R.color.warn, true);
         score.setPadding(Ui.dp(this, 2), 0, 0, Ui.dp(this, 6));
         rel.addView(score);
         rel.addView(check("Notificações", notif, "Permitidas", "Bloqueadas — não verá os lembretes",
                 () -> startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()))));
-        rel.addView(check("Alarmes exatos", exact, "Permitidos — toca ao minuto", "Não permitidos — pode atrasar vários minutos", () -> {
+        rel.addView(check("Alarmes exatos", exact, "Permitidos — toca ao minuto", "Não permitidos — as notificações podem atrasar vários minutos", () -> {
             if (Build.VERSION.SDK_INT >= 31) startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName())));
         }));
-        rel.addView(check("Otimização de bateria", battery, "Sem restrições", "Restrita — o sistema pode adiar ou bloquear alarmes", () -> {
+        rel.addView(check("Otimização de bateria", battery, "Sem restrições", "Restrita — o sistema pode adiar ou bloquear as notificações", () -> {
             try {
                 startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())));
             } catch (Exception e) {
                 startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
             }
         }));
-        if (Build.VERSION.SDK_INT >= 34) {
-            rel.addView(check("Ecrã inteiro (despertador)", fs, "Permitido", "Não permitido — o despertador aparece só como notificação",
-                    () -> startActivity(new Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT", Uri.parse("package:" + getPackageName())))));
-        }
-        rel.addView(check("Abrir por cima de outras apps", overlay, "Permitido — o alarme abre o ecrã com o telemóvel desbloqueado",
-                "Não permitido — com o telemóvel desbloqueado só aparece a notificação",
-                () -> startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())))));
-        String diag = Prefs.str(this, "alarm_diag");
-        if (diag != null) rel.addView(Views.hint(this, "Diagnóstico: " + diag));
         final String mf = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase(Locale.ROOT);
         if (mf.contains("xiaomi") || mf.contains("redmi") || mf.contains("poco")) {
             TextView xb = Ui.button(this, "Abrir permissões Xiaomi", false);
@@ -459,14 +344,6 @@ public class SettingsActivity extends BaseActivity {
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
-        if (req == REQ_SOUND) {
-            if (res == RESULT_OK && data != null) {
-                Uri u = data.getParcelableExtra(android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
-                Prefs.setAlarmSound(this, u == null ? null : u.toString());
-                render();
-            }
-            return;
-        }
         if (res != RESULT_OK || data == null || data.getData() == null) return;
         Uri uri = data.getData();
         try {

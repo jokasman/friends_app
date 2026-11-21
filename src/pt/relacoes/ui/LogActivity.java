@@ -23,9 +23,7 @@ import pt.relacoes.notify.Engine;
 
 /** Registar um contacto ("Já falei"): data (pode ser passada), meio e nota. Em janela de diálogo. */
 public class LogActivity extends BaseActivity {
-    static final String EXTRA_MEDIUM = "medium", EXTRA_MESSAGE = "message", EXTRA_TEMPLATE = "template", EXTRA_ASK = "ask", EXTRA_BY_THEM = "by_them", EXTRA_FROM_ALARM = "fromAlarm";
-    private boolean fromAlarm, registered;
-    private long alarmReminder;
+    static final String EXTRA_MEDIUM = "medium", EXTRA_MESSAGE = "message", EXTRA_TEMPLATE = "template", EXTRA_ASK = "ask", EXTRA_BY_THEM = "by_them";
     private static final int[] FOLLOW = {0, 1, 2, 3, 7};
     private static final String[] FOLLOW_N = {"Não", "1 dia", "2 dias", "3 dias", "1 semana"};
 
@@ -39,12 +37,6 @@ public class LogActivity extends BaseActivity {
         super.onCreate(b);
         setFinishOnTouchOutside(false);
         Intent in = getIntent();
-        fromAlarm = in.getBooleanExtra(EXTRA_FROM_ALARM, false);
-        alarmReminder = in.getLongExtra(PersonActivity.EXTRA_REMINDER, 0);
-        if (fromAlarm) {
-            if (android.os.Build.VERSION.SDK_INT >= 27) { setShowWhenLocked(true); setTurnScreenOn(true); }
-            else getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-        }
         long personId = in.getLongExtra(PersonActivity.EXTRA_PERSON, 0);
         long reminderId = in.getLongExtra(PersonActivity.EXTRA_REMINDER, 0);
         Person p = Db.get(this).person(personId);
@@ -136,13 +128,9 @@ public class LogActivity extends BaseActivity {
             i.message = msg;
             i.templateId = template;
             i.byMe = byMe[0];
-            // Registar fecha o lembrete: nos alarmes exige a impressão digital.
-            Auth.confirmDone(this, reminderId > 0 ? Db.get(this).reminder(reminderId) : null, () -> {
-                registered = true;
-                Engine.contacted(this, i, reminderId, byMe[0] ? follow[0] : 0);
-                Toast.makeText(this, "Contacto registado", Toast.LENGTH_SHORT).show();
-                finish();
-            });
+            Engine.contacted(this, i, reminderId, byMe[0] ? follow[0] : 0);
+            Toast.makeText(this, "Contacto registado", Toast.LENGTH_SHORT).show();
+            finish();
         });
         btns.addView(cancel);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -153,15 +141,5 @@ public class LogActivity extends BaseActivity {
         ScrollView sv = new ScrollView(this);
         sv.addView(box);
         setContentView(sv);
-    }
-
-    @Override protected void onDestroy() {
-        // Veio do alarme e não registou: o alarme volta a tocar (só pára com uma decisão).
-        if (fromAlarm && !registered && isFinishing()) {
-            pt.relacoes.core.Reminder cur = Db.get(this).reminder(alarmReminder);
-            if (cur != null && !cur.done && cur.notified) pt.relacoes.notify.AlarmService.resume();
-            else pt.relacoes.notify.AlarmService.stop(null);
-        }
-        super.onDestroy();
     }
 }

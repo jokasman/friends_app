@@ -28,8 +28,6 @@ import pt.relacoes.notify.Engine;
 
 /** Criar ou editar um lembrete (único, recorrente ou de aniversário). */
 public class ReminderActivity extends BaseActivity {
-    private static final int[] NAG = {0, 15, 30, 60, 120, 240, 1440};
-    private static final String[] NAG_N = {"Não insistir", "15 min", "30 min", "1 hora", "2 horas", "4 horas", "1 dia"};
     private static final int[] OFFS = {0, 1, 3, 7, 14, 30};
     private static final String[] OFFS_N = {"No dia", "1 dia antes", "3 dias antes", "1 semana antes", "2 semanas antes", "1 mês antes"};
     private static final String[] UNITS = {"Dias", "Semanas", "Meses", "Anos"};
@@ -52,7 +50,6 @@ public class ReminderActivity extends BaseActivity {
             r = new Reminder();
             r.kind = Reminder.ONCE;
             r.nagMin = Prefs.nagDefault(this);
-            r.alarm = true;
             r.personId = getIntent().getLongExtra(PersonActivity.EXTRA_PERSON, 0);
             when.add(Calendar.DAY_OF_MONTH, 1);
             int m = Prefs.morning(this);
@@ -161,26 +158,11 @@ public class ReminderActivity extends BaseActivity {
             content.addView(dc);
         }
 
-        LinearLayout al = Ui.card(this);
-        al.addView(Ui.cardHeader(this, R.drawable.ic_bell, "Despertador"));
-        android.widget.Switch sw = new android.widget.Switch(this);
-        sw.setText("Tocar como despertador");
-        sw.setTextColor(Ui.col(this, R.color.text));
-        sw.setTextSize(15);
-        sw.setChecked(r.alarm);
-        sw.setOnCheckedChangeListener((v, on) -> r.alarm = on);
-        al.addView(sw, Ui.lpMW());
-        al.addView(Views.hint(this, "Toca com som de alarme mesmo em silêncio, em ecrã inteiro, até marcar como feito"
-                + (Prefs.requireBiometric(this) ? " (com a impressão digital)" : "") + " ou adiar."));
-        content.addView(al);
-
         LinearLayout nc = Ui.card(this);
-        nc.addView(Ui.cardHeader(this, R.drawable.ic_repeat, "Insistência"));
-        int ns = 0;
-        for (int i = 0; i < NAG.length; i++) if (NAG[i] == r.nagMin) ns = i;
-        nc.addView(Views.chooserWrap(this, NAG_N, ns, 3, k -> r.nagMin = NAG[k]));
-        nc.addView(Views.hint(this, "Enquanto não for marcado como feito, volta a avisar com esta periodicidade "
-                + "(sem insistir entre as " + Fmt.hm(Prefs.quietStart(this)) + " e as " + Fmt.hm(Prefs.morning(this)) + ")."));
+        nc.addView(Ui.cardHeader(this, R.drawable.ic_repeat, "Repetir a notificação"));
+        nc.addView(Views.nagChooser(this, r.nagMin, m -> r.nagMin = m));
+        nc.addView(Views.hint(this, "Enquanto não for marcado como feito, envia uma nova notificação com esta periodicidade"
+                + (Prefs.nightPause(this) ? " (exceto entre as " + Fmt.hm(Prefs.quietStart(this)) + " e as " + Fmt.hm(Prefs.morning(this)) + ")." : ".")));
         content.addView(nc);
 
         if (r.auto == Reminder.AUTO_FOLLOWUP) {
@@ -190,7 +172,7 @@ public class ReminderActivity extends BaseActivity {
         }
         if (!isNew) {
             TextView done = Ui.button(this, "Marcar como feito", true);
-            done.setOnClickListener(v -> Auth.confirmDone(this, Db.get(this).reminder(r.id), () -> { Engine.done(this, r.id); finish(); }));
+            done.setOnClickListener(v -> { Engine.done(this, r.id); finish(); });
             LinearLayout.LayoutParams lp = Ui.lpMW();
             lp.setMargins(Ui.dp(this, 14), Ui.dp(this, 8), Ui.dp(this, 14), 0);
             content.addView(done, lp);

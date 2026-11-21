@@ -21,15 +21,15 @@ public class Reminder {
     public int repeatUnit = MONTH, repeatN = 1;
     /** Aniversário: dias antes (0 = no dia). */
     public int offsetDays;
-    /** Insistência: volta a notificar a cada N minutos até ser feito (0 = não insiste). */
-    public int nagMin = 60;
+    /** Repete a notificação a cada N minutos até ser feito (0 = não repete). */
+    public int nagMin = 5;
     /** Próxima notificação (Long.MAX_VALUE = nenhuma). */
     public long nextAt = Long.MAX_VALUE;
     public boolean done;
     public long doneAt;
     /** Já notificado pelo menos uma vez para a data atual. */
     public boolean notified;
-    /** Toca como despertador (som de alarme em ecrã inteiro até uma decisão). */
+    /** Coluna antiga do despertador (já não é usada). */
     public boolean alarm;
 
     /** Gerido automaticamente a partir da pessoa (manter contacto e avisos de aniversário): não se edita à mão. */
